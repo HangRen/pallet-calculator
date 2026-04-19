@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>大咖原料仓出库计算器</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui; background:#f4f6f8; padding:16px; max-width:400px; margin:auto}
+.card{background:white; border-radius:12px; padding:16px; box-shadow:0 2px 8px #0001}
+h2{text-align:center; margin:0 0 12px}
+.label{font-size:14px; color:#555; margin:8px 0 4px}
+input{width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:16px}
+.btn{width:100%; padding:12px; background:#007aff; color:white; border:none; border-radius:8px; margin:16px 0; font-size:16px}
+.res{margin-top:12px; padding:12px; background:#eef7ff; border-radius:8px; line-height:1.6}
+.gray{color:#666}
+.tip{font-size:12px;color:#888;margin:4px 0}
+.choice{margin:10px 0; display:flex; gap:12px; font-size:15px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>原料出库托数计算器</h2>
+
+  <div class="choice">
+    <label><input type="radio" name="type" value="box" checked> 按箱数计算</label>
+    <label><input type="radio" name="type" value="kg"> 按千克数计算</label>
+  </div>
+
+  <div id="boxArea">
+    <div class="label">所需箱数</div>
+    <input id="box" type="number" placeholder="例如 490">
+
+    <div class="label">每箱重量(kg)</div>
+    <input id="perBox" type="number" placeholder="例如 20">
+  </div>
+
+  <div id="kgArea" style="display:none">
+    <div class="label">所需千克数(kg)</div>
+    <input id="needKg" type="number" placeholder="例如 1000">
+  </div>
+
+  <div class="label">每托重量(kg)</div>
+  <input id="perPallet" type="number" placeholder="例如 560">
+
+  <div class="label">现有零托重量(kg，可选)</div>
+  <input id="zeroPallet" type="number" placeholder="没有就填0">
+
+  <button class="btn" onclick="calc()">计算出库 & 多出箱数</button>
+
+  <div class="res" id="result" style="display:none"></div>
+</div>
+
+<script>
+// 切换输入区域
+document.querySelectorAll('input[name="type"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const isBox = document.querySelector('input[name="type"][value="box"]').checked;
+    document.getElementById('boxArea').style.display = isBox ? 'block' : 'none';
+    document.getElementById('kgArea').style.display = isBox ? 'none' : 'block';
+  });
+});
+
+function calc(){
+  const isBox = document.querySelector('input[name="type"][value="box"]').checked;
+  const perPallet = Number(document.getElementById('perPallet').value);
+  const zeroPallet = Number(document.getElementById('zeroPallet').value) || 0;
+
+  if(!perPallet){
+    alert('请填写每托重量');
+    return;
+  }
+
+  let totalNeed;
+  let perBox = 0;
+
+  if(isBox){
+    const box = Number(document.getElementById('box').value);
+    perBox = Number(document.getElementById('perBox').value);
+    if(!box || !perBox){
+      alert('请填写所需箱数和每箱重量');
+      return;
+    }
+    totalNeed = box * perBox;
+  } else {
+    const needKg = Number(document.getElementById('needKg').value);
+    if(!needKg){
+      alert('请填写所需千克数');
+      return;
+    }
+    totalNeed = needKg;
+  }
+
+  // 计算逻辑
+  const needAfterZero = Math.max(totalNeed - zeroPallet, 0);
+  const fullPallet = Math.ceil(needAfterZero / perPallet);
+  const actual = zeroPallet + fullPallet * perPallet;
+  const extraWeight = actual - totalNeed;
+  const extraBox = perBox > 0 ? (extraWeight / perBox).toFixed(2) : '无需计算';
+  const totalPallet = fullPallet + (zeroPallet > 0 ? 1 : 0);
+
+  const html = `
+总需求重量：${totalNeed} kg<br>
+需整托：${fullPallet} 托<br>
+零托：${zeroPallet>0 ? zeroPallet+'kg' : '无'}<br>
+总托数：${totalPallet} 托<br>
+实际出库：${actual} kg<br>
+<span style="color:red;font-weight:bold">多出重量：${extraWeight} kg = ${extraBox} 箱</span>
+  `;
+
+  document.getElementById('result').innerHTML = html;
+  document.getElementById('result').style.display = 'block';
+}
+</script>
+</body>
+</html>
