@@ -16,43 +16,84 @@ input{width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-s
 .gray{color:#666}
 .tip{font-size:12px;color:#888;margin:4px 0}
 .choice{margin:10px 0; display:flex; gap:12px; font-size:15px}
+
+/* 标签页样式 */
+.tab-wrap{display:flex; margin-bottom:12px; border-radius:8px; overflow:hidden; border:1px solid #ddd}
+.tab{flex:1; padding:8px; text-align:center; cursor:pointer; background:#f1f1f1}
+.tab.active{background:#007aff; color:white}
+.tab-content{display:none}
+.tab-content.active{display:block}
 </style>
 </head>
 <body>
 <div class="card">
-  <h2>原料出库托数计算器</h2>
+  <h2>大咖原料仓计算器</h2>
 
-  <div class="choice">
-    <label><input type="radio" name="type" value="box" checked> 按箱数计算</label>
-    <label><input type="radio" name="type" value="kg"> 按千克数计算</label>
+  <!-- 标签切换 -->
+  <div class="tab-wrap">
+    <div class="tab active" data-target="outStock">出库托数计算</div>
+    <div class="tab" data-target="divCalc">商数余数计算</div>
   </div>
 
-  <div id="boxArea">
-    <div class="label">所需箱数</div>
-    <input id="box" type="number" placeholder="例如 490">
+  <!-- 出库计算面板 -->
+  <div id="outStock" class="tab-content active">
+    <div class="choice">
+      <label><input type="radio" name="type" value="box" checked> 按箱数计算</label>
+      <label><input type="radio" name="type" value="kg"> 按千克数计算</label>
+    </div>
 
-    <div class="label">每箱重量(kg)</div>
-    <input id="perBox" type="number" placeholder="例如 20">
+    <div id="boxArea">
+      <div class="label">所需箱数</div>
+      <input id="box" type="number" placeholder="例如 490">
+
+      <div class="label">每箱重量(kg)</div>
+      <input id="perBox" type="number" placeholder="例如 20">
+    </div>
+
+    <div id="kgArea" style="display:none">
+      <div class="label">所需千克数(kg)</div>
+      <input id="needKg" type="number" placeholder="例如 1000">
+    </div>
+
+    <div class="label">每托重量(kg)</div>
+    <input id="perPallet" type="number" placeholder="例如 560">
+
+    <div class="label">现有零托重量(kg，可选)</div>
+    <input id="zeroPallet" type="number" placeholder="没有就填0">
+
+    <button class="btn" onclick="calcOutStock()">计算出库 & 多出箱数</button>
+
+    <div class="res" id="resultStock" style="display:none"></div>
   </div>
 
-  <div id="kgArea" style="display:none">
-    <div class="label">所需千克数(kg)</div>
-    <input id="needKg" type="number" placeholder="例如 1000">
+  <!-- 商余计算器面板 -->
+  <div id="divCalc" class="tab-content">
+    <div class="label">被除数（总数）</div>
+    <input id="dividend" type="number" placeholder="例如 1000">
+
+    <div class="label">除数（每份数量）</div>
+    <input id="divisor" type="number" placeholder="例如 560">
+
+    <button class="btn" onclick="calcDiv()">计算商和余数</button>
+
+    <div class="res" id="resultDiv" style="display:none"></div>
   </div>
-
-  <div class="label">每托重量(kg)</div>
-  <input id="perPallet" type="number" placeholder="例如 560">
-
-  <div class="label">现有零托重量(kg，可选)</div>
-  <input id="zeroPallet" type="number" placeholder="没有就填0">
-
-  <button class="btn" onclick="calc()">计算出库 & 多出箱数</button>
-
-  <div class="res" id="result" style="display:none"></div>
 </div>
 
 <script>
-// 切换输入区域
+// 标签切换
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    // 移除所有激活
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
+    // 添加当前激活
+    tab.classList.add('active')
+    document.getElementById(tab.dataset.target).classList.add('active')
+  })
+})
+
+// 切换出库输入区域
 document.querySelectorAll('input[name="type"]').forEach(radio => {
   radio.addEventListener('change', () => {
     const isBox = document.querySelector('input[name="type"][value="box"]').checked;
@@ -61,7 +102,8 @@ document.querySelectorAll('input[name="type"]').forEach(radio => {
   });
 });
 
-function calc(){
+// 出库计算
+function calcOutStock(){
   const isBox = document.querySelector('input[name="type"][value="box"]').checked;
   const perPallet = Number(document.getElementById('perPallet').value);
   const zeroPallet = Number(document.getElementById('zeroPallet').value) || 0;
@@ -91,7 +133,6 @@ function calc(){
     totalNeed = needKg;
   }
 
-  // 计算逻辑
   const needAfterZero = Math.max(totalNeed - zeroPallet, 0);
   const fullPallet = Math.ceil(needAfterZero / perPallet);
   const actual = zeroPallet + fullPallet * perPallet;
@@ -108,8 +149,35 @@ function calc(){
 <span style="color:red;font-weight:bold">多出重量：${extraWeight} kg = ${extraBox} 箱</span>
   `;
 
-  document.getElementById('result').innerHTML = html;
-  document.getElementById('result').style.display = 'block';
+  document.getElementById('resultStock').innerHTML = html;
+  document.getElementById('resultStock').style.display = 'block';
+}
+
+// 商余计算
+function calcDiv() {
+  const a = Number(document.getElementById('dividend').value)
+  const b = Number(document.getElementById('divisor').value)
+
+  if (!b) {
+    alert('除数不能为0')
+    return
+  }
+  if (isNaN(a) || isNaN(b)) {
+    alert('请输入有效数字')
+    return
+  }
+
+  const shang = Math.floor(a / b)
+  const yu = a % b
+
+  const html = `
+${a} ÷ ${b} = ${shang} … ${yu}<br>
+商：${shang}<br>
+余数：${yu}
+  `
+
+  document.getElementById('resultDiv').innerHTML = html
+  document.getElementById('resultDiv').style.display = 'block'
 }
 </script>
 </body>
