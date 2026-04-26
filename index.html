@@ -3,182 +3,169 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>大咖原料仓出库计算器</title>
+<title>大咖原料仓综合计算器</title>
 <style>
 *{box-sizing:border-box}
 body{font-family:system-ui; background:#f4f6f8; padding:16px; max-width:400px; margin:auto}
 .card{background:white; border-radius:12px; padding:16px; box-shadow:0 2px 8px #0001}
 h2{text-align:center; margin:0 0 12px}
 .label{font-size:14px; color:#555; margin:8px 0 4px}
-input{width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:16px}
+.input-group{display:flex; align-items:center; gap:8px; margin-bottom:8px}
+input, select{flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:16px}
+select{flex:0 0 75px; background:#f8f9fa}
 .btn{width:100%; padding:12px; background:#007aff; color:white; border:none; border-radius:8px; margin:16px 0; font-size:16px}
-.res{margin-top:12px; padding:12px; background:#eef7ff; border-radius:8px; line-height:1.6}
-.choice{margin:10px 0; display:flex; gap:12px; font-size:15px}
-
+.res{margin-top:12px; padding:12px; background:#eef7ff; border-radius:8px; line-height:1.6; font-size:14px}
+.summary-box{margin-top:10px; padding:10px; background:#fff3cd; border:2px solid #ffc107; border-radius:8px; color:#856404; font-weight:bold; font-size:14px}
 .tab-wrap{display:flex; margin-bottom:12px; border-radius:8px; overflow:hidden; border:1px solid #ddd}
-.tab{flex:1; padding:8px; text-align:center; cursor:pointer; background:#f1f1f1}
+.tab{flex:1; padding:8px; text-align:center; cursor:pointer; background:#f1f1f1; font-size:13px}
 .tab.active{background:#007aff; color:white}
-.tab-content{display:none}
-.tab-content.active{display:block}
-
+.tab-content{display:none}.tab-content.active{display:block}
 .zero-item{display:flex; gap:6px; margin:6px 0}
-.zero-item input{flex:1}
 .del{background:#ff3b30;color:white;border:none;border-radius:6px;padding:0 8px}
 .add-line{background:#34c759;color:white;border:none;border-radius:8px;padding:6px;width:100%;margin:6px 0}
+.history-item{font-size:12px; border-bottom:1px solid #eee; padding:10px 0}
 </style>
 </head>
 <body>
 <div class="card">
   <h2>大咖原料仓计算器</h2>
-
   <div class="tab-wrap">
-    <div class="tab active" data-target="outStock">出库托数计算</div>
-    <div class="tab" data-target="divCalc">商数余数计算</div>
+    <div class="tab active" data-target="outStock">出库</div>
+    <div class="tab" data-target="splitCalc">拆零</div>
+    <div class="tab" data-target="divCalc">除法</div>
+    <div class="tab" data-target="historyTab" onclick="renderHistory()">记录</div>
   </div>
 
   <div id="outStock" class="tab-content active">
-    <div class="choice">
-      <label><input type="radio" name="type" value="box" checked> 按箱数计算</label>
-      <label><input type="radio" name="type" value="kg"> 按千克数计算</label>
-    </div>
-
-    <div id="boxArea">
-      <div class="label">所需箱数</div>
-      <input id="box" type="number" placeholder="例如 490">
-
-      <div class="label">每箱重量(kg)</div>
-      <input id="perBox" type="number" placeholder="例如 20">
-    </div>
-
-    <div id="kgArea" style="display:none">
-      <div class="label">所需千克数(kg)</div>
-      <input id="needKg" type="number" placeholder="例如 1000">
-    </div>
-
-    <div class="label">每托重量(kg)</div>
-    <input id="perPallet" type="number" placeholder="例如 560">
-
-    <div class="label">已出库重量(kg)</div>
-    <input id="outedKg" type="number" value="0">
-
-    <div class="label">现有零托重量(kg)</div>
-    <div id="zeroList">
-      <div class="zero-item">
-        <input class="zero-input" type="number" placeholder="零托重量">
-        <button class="del" onclick="delLine(this)">×</button>
-      </div>
-    </div>
-    <button class="add-line" onclick="addZeroLine()">+ 增加一行零托</button>
-
-    <button class="btn" onclick="calcOutStock()">计算出库 & 多出箱数</button>
-
+    <div class="label">每箱重量 (kg)</div>
+    <input id="perBox" type="number" inputmode="decimal" min="0" placeholder="20">
+    <div class="label">需求总量</div>
+    <div class="input-group"><input id="needVal" type="number" inputmode="decimal" min="0"><select id="needUnit"><option value="box">箱</option><option value="kg">kg</option></select></div>
+    <div class="label">每托重量 (kg)</div>
+    <input id="perPalletVal" type="number" inputmode="decimal" min="0">
+    <div class="label">已出库重量 (kg)</div>
+    <input id="outedVal" type="number" inputmode="decimal" min="0" value="0">
+    <div class="label">现有零托列表 (kg)</div>
+    <div id="zeroList"><div class="zero-item"><input class="zero-input" type="number" inputmode="decimal" min="0"><button class="del" onclick="delLine(this)">×</button></div></div>
+    <button class="add-line" onclick="addZeroLine()">+ 增加零托</button>
+    <button class="btn" onclick="calcOutStock()">计算并保存</button>
     <div class="res" id="resultStock"></div>
   </div>
 
+  <div id="splitCalc" class="tab-content">
+    <div class="label">顾客需求</div>
+    <div class="input-group"><input id="splitNeedVal" type="number" inputmode="decimal" min="0"><select id="splitNeedUnit"><option value="kg">kg</option><option value="box">箱</option></select></div>
+    <div class="label">托盘总重</div>
+    <div class="input-group"><input id="splitTotalVal" type="number" inputmode="decimal" min="0"><select id="splitTotalUnit"><option value="kg">kg</option><option value="box">箱</option></select></div>
+    <div class="label">每箱重量</div>
+    <input id="splitPerBox" type="number" inputmode="decimal" min="0" placeholder="20">
+    <button class="btn" onclick="calcSplit()">计算并保存</button>
+    <div class="res" id="resultSplit"></div>
+  </div>
+
   <div id="divCalc" class="tab-content">
-    <div class="label">被除数（总数）</div>
-    <input id="dividend" type="number" placeholder="例如 1000">
-
-    <div class="label">除数（每份数量）</div>
-    <input id="divisor" type="number" placeholder="例如 560">
-
-    <button class="btn" onclick="calcDiv()">计算商和余数</button>
-
+    <div class="label">被除数</div><input id="dividend" type="number" inputmode="decimal" min="0">
+    <div class="label">除数</div><input id="divisor" type="number" inputmode="decimal" min="0">
+    <button class="btn" onclick="calcDiv()">计算商余</button>
     <div class="res" id="resultDiv"></div>
+  </div>
+
+  <div id="historyTab" class="tab-content">
+    <div id="historyList"></div>
+    <button class="btn" style="background:#ff3b30" onclick="clearHistory()">清空所有记录</button>
   </div>
 </div>
 
 <script>
-//标签切换
-document.querySelectorAll('.tab').forEach(t=>{
-t.onclick=function(){
-document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'))
-document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'))
-this.classList.add('active')
-document.getElementById(this.dataset.target).classList.add('active')
-}
-})
+// 选项卡切换
+document.querySelectorAll('.tab').forEach(t=>{ t.onclick=function(){
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById(this.dataset.target).classList.add('active');
+    if(this.dataset.target==='historyTab') renderHistory();
+}});
 
-//单选切换
-document.querySelectorAll('input[name="type"]').forEach(r=>{
-r.onchange=function(){
-let isBox=document.querySelector('input[name="type"][value="box"]').checked
-document.getElementById('boxArea').style.display=isBox?'block':'none'
-document.getElementById('kgArea').style.display=isBox?'none':'block'
-}
-})
-
-//添加零托
 function addZeroLine(){
-let d=document.createElement('div')
-d.className='zero-item'
-d.innerHTML='<input class="zero-input" type="number" placeholder="零托重量"><button class="del" onclick="delLine(this)">×</button>'
-document.getElementById('zeroList').appendChild(d)
+    let d=document.createElement('div'); d.className='zero-item';
+    d.innerHTML='<input class="zero-input" type="number" inputmode="decimal" min="0"><button class="del" onclick="delLine(this)">×</button>';
+    document.getElementById('zeroList').appendChild(d);
 }
-function delLine(btn){
-let all=document.querySelectorAll('.zero-item')
-if(all.length>1) btn.parentElement.remove()
-}
+function delLine(btn){ if(document.querySelectorAll('.zero-item').length>1) btn.parentElement.remove() }
 
-//零托总和
-function getZeroSum(){
-let s=0
-document.querySelectorAll('.zero-input').forEach(i=>s+=Number(i.value)||0)
-return s
+// 存储与历史
+function saveRecord(res){
+    let history = JSON.parse(localStorage.getItem('myHistory') || '[]');
+    history.unshift({ time: new Date().toLocaleTimeString(), res: res, note: '' });
+    localStorage.setItem('myHistory', JSON.stringify(history.slice(0, 50)));
 }
+function renderHistory(){
+    let history = JSON.parse(localStorage.getItem('myHistory') || '[]');
+    document.getElementById('historyList').innerHTML = history.map((h, i) => `
+        <div class="history-item">
+            <div><strong>${h.time}</strong></div>
+            <div>${h.res.replace(/\n/g, '<br>')}</div>
+            <input type="text" placeholder="添加备注..." value="${h.note}" onchange="updateNote(${i}, this.value)">
+        </div>
+    `).join('');
+}
+function updateNote(i, val){
+    let h = JSON.parse(localStorage.getItem('myHistory'));
+    h[i].note = val;
+    localStorage.setItem('myHistory', JSON.stringify(h));
+}
+function clearHistory(){ if(confirm('确定清空所有记录吗？')) { localStorage.removeItem('myHistory'); renderHistory(); } }
 
-//核心计算
+// 计算逻辑
 function calcOutStock(){
-let isBox=document.querySelector('input[name="type"][value="box"]').checked
-let perT=Number(document.getElementById('perPallet').value)||0
-let outed=Number(document.getElementById('outedKg').value)||0
-let zeroKg=getZeroSum()
-let zeroNum=document.querySelectorAll('.zero-input').length
-
-if(!perT){alert('请填写每托重量');return;}
-
-let totalNeed,perB=0
-if(isBox){
-let box=Number(document.getElementById('box').value)||0
-perB=Number(document.getElementById('perBox').value)||0
-if(!box||!perB){alert('请填箱数和每箱重量');return;}
-totalNeed=box*perB
-}else{
-totalNeed=Number(document.getElementById('needKg').value)||0
-if(!totalNeed){alert('请填所需千克');return;}
+    let pBox = Number(document.getElementById('perBox').value)||0;
+    if(!pBox){alert('请填写每箱重量');return;}
+    let totalNeed = (document.getElementById('needUnit').value === 'box') ? Number(document.getElementById('needVal').value) * pBox : Number(document.getElementById('needVal').value);
+    let perT = Number(document.getElementById('perPalletVal').value)||0;
+    if(!perT){alert('请填写每托重量');return;}
+    let zeroTotal = 0; document.querySelectorAll('.zero-input').forEach(i=>zeroTotal+=Number(i.value)||0);
+    
+    let still = Math.max(totalNeed - Number(document.getElementById('outedVal').value), 0);
+    let useFromZero = Math.min(still, zeroTotal);
+    let leftNeed = still - useFromZero;
+    let fullNum = Math.floor(leftNeed / perT);
+    let needSplit = leftNeed % perT;
+    
+    const toStr = (kg) => `${kg.toFixed(2)} kg / ${(kg/pBox).toFixed(2)} 箱`;
+    
+    let res = `补货明细：\n1. 消耗零托：${toStr(useFromZero)}`;
+    if(fullNum > 0) res += `\n2. 出整托：${fullNum} 托`;
+    
+    let summary = `【汇总】需出库：${fullNum} 整托`;
+    if(useFromZero > 0) summary += ` + ${useFromZero.toFixed(2)}kg 零托`;
+    
+    if(needSplit > 0) {
+        res += `\n3. 需拆整托：拆开1托(${toStr(perT)})给顾客 ${toStr(needSplit)}，留存 ${toStr(perT - needSplit)} 回库。`;
+        summary += ` + 1 托拆分（给顾客${needSplit.toFixed(2)}kg，留存${(perT-needSplit).toFixed(2)}kg）`;
+    }
+    
+    let finalHtml = res + `<div class="summary-box">${summary}</div>`;
+    document.getElementById('resultStock').innerHTML = finalHtml;
+    saveRecord(finalHtml);
 }
 
-let still=Math.max(totalNeed-outed,0)
-let needFull=Math.max(still-zeroKg,0)
-let fullNum=Math.ceil(needFull/perT)
-let fullKg=fullNum*perT
-let realOut=zeroKg+fullKg
-let moreKg=realOut-still
-let moreBox=perB>0?(moreKg/perB).toFixed(2):'无需计算'
-let totalAll=zeroNum+fullNum
-
-let html=`
-总需求：${totalNeed} kg<br>
-已出库：${outed} kg<br>
-还需补发：${still} kg<br>
-——————————<br>
-零托：${zeroNum} 托，合计 ${zeroKg} kg<br>
-整托：${fullNum} 托，合计 ${fullKg} kg<br>
-——————————<br>
-零整合计共：${totalAll} 托<br>
-本次实际出库：${realOut} kg<br>
-<span style="color:red;font-weight:bold">多出：${moreKg} kg = ${moreBox} 箱</span>
-`
-document.getElementById('resultStock').innerHTML=html
+function calcSplit(){
+    let pBox = Number(document.getElementById('splitPerBox').value)||0;
+    if(!pBox){alert('请填写每箱重量'); return;}
+    let nKg = (document.getElementById('splitNeedUnit').value === 'box') ? Number(document.getElementById('splitNeedVal').value) * pBox : Number(document.getElementById('splitNeedVal').value);
+    let tKg = (document.getElementById('splitTotalUnit').value === 'box') ? Number(document.getElementById('splitTotalVal').value) * pBox : Number(document.getElementById('splitTotalVal').value);
+    const toBoxStr = (kg) => `${Math.floor(kg/pBox)} 箱 + ${(kg%pBox).toFixed(2)} kg`;
+    let res = `【拆零结果】\n出库：${nKg.toFixed(2)} kg (${toBoxStr(nKg)})\n留存：${(tKg-nKg).toFixed(2)} kg (${toBoxStr(tKg-nKg)})`;
+    document.getElementById('resultSplit').innerText = res;
+    saveRecord(res);
 }
 
-//商余
 function calcDiv(){
-let a=Number(document.getElementById('dividend').value)
-let b=Number(document.getElementById('divisor').value)
-if(!b){alert('除数不能为0');return;}
-let s=Math.floor(a/b),y=a%b
-document.getElementById('resultDiv').innerHTML=`${a}÷${b}=${s}…${y}<br>商：${s}<br>余数：${y}`
+    let a=Number(document.getElementById('dividend').value), b=Number(document.getElementById('divisor').value);
+    if(!b){alert('除数不能为0');return;}
+    let res = `除法结果：${a} ÷ ${b} = ${Math.floor(a/b)} 余 ${a%b}`;
+    document.getElementById('resultDiv').innerText = res;
+    saveRecord(res);
 }
 </script>
 </body>
