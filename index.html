@@ -1,172 +1,587 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>大咖原料仓综合计算器</title>
-<style>
-*{box-sizing:border-box}
-body{font-family:system-ui; background:#f4f6f8; padding:16px; max-width:400px; margin:auto}
-.card{background:white; border-radius:12px; padding:16px; box-shadow:0 2px 8px #0001}
-h2{text-align:center; margin:0 0 12px}
-.label{font-size:14px; color:#555; margin:8px 0 4px}
-.input-group{display:flex; align-items:center; gap:8px; margin-bottom:8px}
-input, select{flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:16px}
-select{flex:0 0 75px; background:#f8f9fa}
-.btn{width:100%; padding:12px; background:#007aff; color:white; border:none; border-radius:8px; margin:16px 0; font-size:16px}
-.res{margin-top:12px; padding:12px; background:#eef7ff; border-radius:8px; line-height:1.6; font-size:14px}
-.summary-box{margin-top:10px; padding:10px; background:#fff3cd; border:2px solid #ffc107; border-radius:8px; color:#856404; font-weight:bold; font-size:14px}
-.tab-wrap{display:flex; margin-bottom:12px; border-radius:8px; overflow:hidden; border:1px solid #ddd}
-.tab{flex:1; padding:8px; text-align:center; cursor:pointer; background:#f1f1f1; font-size:13px}
-.tab.active{background:#007aff; color:white}
-.tab-content{display:none}.tab-content.active{display:block}
-.zero-item{display:flex; gap:6px; margin:6px 0}
-.del{background:#ff3b30;color:white;border:none;border-radius:6px;padding:0 8px}
-.add-line{background:#34c759;color:white;border:none;border-radius:8px;padding:6px;width:100%;margin:6px 0}
-.history-item{font-size:12px; border-bottom:1px solid #eee; padding:10px 0}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>大咖原料仓综合计算器</title>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:system-ui; background:#f4f6f8; padding:16px; max-width:400px; margin:auto}
+    .card{background:white; border-radius:12px; padding:16px; box-shadow:0 2px 8px #0001}
+    h2{text-align:center; margin:0 0 12px; font-size:18px}
+    .label{font-size:14px; color:#555; margin:8px 0 4px}
+    .input-group{display:flex; align-items:center; gap:8px; margin-bottom:8px}
+    input, select{flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:16px}
+    select{flex:0 0 75px; background:#f8f9fa}
+    .btn{width:100%; padding:12px; background:#007aff; color:white; border:none; border-radius:8px; margin:16px 0; font-size:16px; cursor:pointer}
+    .btn-export{background:#5856d6}
+    .res{margin-top:12px; padding:12px; background:#eef7ff; border-radius:8px; line-height:1.6; font-size:14px}
+    .summary-box{margin-top:10px; padding:10px; background:#fff3cd; border:2px solid #ffc107; border-radius:8px; color:#856404; font-weight:bold; font-size:14px}
+    .tab-wrap{display:flex; margin-bottom:12px; border-radius:8px; overflow:hidden; border:1px solid #ddd}
+    .tab{flex:1; padding:8px; text-align:center; cursor:pointer; background:#f1f1f1; font-size:13px}
+    .tab.active{background:#007aff; color:white}
+    .tab-content{display:none}.tab-content.active{display:block}
+    .zero-item{display:flex; gap:6px; margin:6px 0}
+    .del{background:#ff3b30;color:white;border:none;border-radius:6px;padding:0 8px;cursor:pointer}
+    .add-line{background:#34c759;color:white;border:none;border-radius:8px;padding:6px;width:100%;margin:6px 0;cursor:pointer}
+    .history-item{font-size:12px; border-bottom:1px solid #eee; padding:10px 0}
+    .history-item:first-child{border-top:1px solid #eee}
+    .result-card{padding:10px 12px; border-radius:8px; margin:8px 0; font-size:13px}
+    .result-card.blue{background:#dbeafe; border-left:4px solid #007aff}
+    .result-card.green{background:#dcfce7; border-left:4px solid #22c55e}
+    .result-card.orange{background:#ffedd5; border-left:4px solid #f97316}
+    .result-card.purple{background:#f3e8ff; border-left:4px solid #a855f7}
+    .result-num{font-size:20px; font-weight:bold}
+    .search-bar{display:flex; gap:8px; margin-bottom:10px}
+    .search-bar input{flex:1}
+    .filter-bar{display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap}
+    .filter-btn{padding:6px 12px; background:#f1f1f1; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-size:12px}
+    .filter-btn.active{background:#007aff; color:white; border-color:#007aff}
+    .history-tags{margin:6px 0}
+    .tag{padding:2px 8px; border-radius:10px; font-size:11px; margin-right:4px; display:inline-block}
+    .tag-customer{background:#ffedd5; color:#c2410c}
+    .tag-label{background:#dbeafe; color:#1d4ed8}
+    .history-expand{cursor:pointer; color:#007aff; font-size:11px; margin:6px 0}
+    .history-params{background:#f5f5f5; padding:8px; border-radius:6px; font-size:11px; margin:6px 0; display:none}
+    .history-params.show{display:block}
+    .param-row{display:flex; justify-content:space-between; padding:2px 0}
+    .history-actions{margin:8px 0; display:flex; gap:6px; flex-wrap:wrap}
+    .history-btn{padding:5px 10px; border:none; border-radius:6px; cursor:pointer; font-size:11px}
+    .history-btn.backfill{background:#007aff; color:white}
+    .history-btn.delete{background:#ff3b30; color:white}
+    .note-input{width:100%; padding:6px; border:1px solid #ddd; border-radius:6px; font-size:12px; margin-top:6px}
+    .modal{position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000; display:none}
+    .modal.show{display:flex}
+    .modal-content{background:white; padding:20px; border-radius:12px; width:90%; max-width:320px}
+    .modal-title{font-size:16px; font-weight:bold; margin-bottom:12px}
+    .modal-input{width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:12px}
+    .modal-actions{display:flex; gap:10px}
+    .modal-btn{flex:1; padding:10px; border:none; border-radius:8px; cursor:pointer}
+    .modal-btn.cancel{background:#f1f1f1}
+    .modal-btn.confirm{background:#007aff; color:white}
+    .empty-state{text-align:center; padding:30px; color:#999}
+    .save-feedback{color:#22c55e; font-size:12px; margin-left:8px; opacity:0; transition:opacity 0.3s}
+    .save-feedback.show{opacity:1}
+  </style>
 </head>
 <body>
-<div class="card">
-  <h2>大咖原料仓计算器</h2>
-  <div class="tab-wrap">
-    <div class="tab active" data-target="outStock">出库</div>
-    <div class="tab" data-target="splitCalc">拆零</div>
-    <div class="tab" data-target="divCalc">除法</div>
-    <div class="tab" data-target="historyTab" onclick="renderHistory()">记录</div>
+  <div class="card">
+    <h2>大咖原料仓计算器</h2>
+    
+    <div class="tab-wrap">
+      <div class="tab active" data-target="outStock">出库</div>
+      <div class="tab" data-target="splitCalc">拆零</div>
+      <div class="tab" data-target="divCalc">除法</div>
+      <div class="tab" data-target="historyTab">记录</div>
+    </div>
+
+    <div id="outStock" class="tab-content active">
+      <div class="label">每箱重量 (kg)</div>
+      <input id="perBox" type="number" inputmode="decimal" min="0" placeholder="20">
+      
+      <div class="label">需求总量</div>
+      <div class="input-group">
+        <input id="needVal" type="number" inputmode="decimal" min="0">
+        <select id="needUnit">
+          <option value="box">箱</option>
+          <option value="kg">kg</option>
+        </select>
+      </div>
+      
+      <div class="label">每托重量 (kg)</div>
+      <input id="perPalletVal" type="number" inputmode="decimal" min="0">
+      
+      <div class="label">已出库重量 (kg)</div>
+      <input id="outedVal" type="number" inputmode="decimal" min="0" value="0">
+      
+      <div class="label">现有零托列表 (kg)</div>
+      <div id="zeroList">
+        <div class="zero-item">
+          <input class="zero-input" type="number" inputmode="decimal" min="0">
+          <button class="del" onclick="delLine(this)">×</button>
+        </div>
+      </div>
+      <button class="add-line" onclick="addZeroLine()">+ 增加零托</button>
+      
+      <button class="btn" onclick="calcOutStock()">计算并保存</button>
+      <div id="resultStock"></div>
+    </div>
+
+    <div id="splitCalc" class="tab-content">
+      <div class="label">顾客需求</div>
+      <div class="input-group">
+        <input id="splitNeedVal" type="number" inputmode="decimal" min="0">
+        <select id="splitNeedUnit">
+          <option value="kg">kg</option>
+          <option value="box">箱</option>
+        </select>
+      </div>
+      
+      <div class="label">托盘总重</div>
+      <div class="input-group">
+        <input id="splitTotalVal" type="number" inputmode="decimal" min="0">
+        <select id="splitTotalUnit">
+          <option value="kg">kg</option>
+          <option value="box">箱</option>
+        </select>
+      </div>
+      
+      <div class="label">每箱重量</div>
+      <input id="splitPerBox" type="number" inputmode="decimal" min="0" placeholder="20">
+      
+      <button class="btn" onclick="calcSplit()">计算并保存</button>
+      <div id="resultSplit"></div>
+    </div>
+
+    <div id="divCalc" class="tab-content">
+      <div class="label">被除数</div>
+      <input id="dividend" type="number" inputmode="decimal" min="0">
+      <div class="label">除数</div>
+      <input id="divisor" type="number" inputmode="decimal" min="0">
+      <button class="btn" onclick="calcDiv()">计算商余</button>
+      <div id="resultDiv"></div>
+    </div>
+
+    <div id="historyTab" class="tab-content">
+      <div class="search-bar">
+        <input id="searchInput" type="text" placeholder="搜索备注/客户/标签..." oninput="renderHistory()">
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</button>
+        <button class="filter-btn" data-filter="outStock" onclick="setFilter('outStock')">出库</button>
+        <button class="filter-btn" data-filter="splitCalc" onclick="setFilter('splitCalc')">拆零</button>
+        <button class="filter-btn" data-filter="divCalc" onclick="setFilter('divCalc')">除法</button>
+      </div>
+      <button class="btn btn-export" onclick="exportCSV()">📥 导出 CSV</button>
+      <div id="historyList"></div>
+      <button class="btn" style="background:#ff3b30" onclick="clearHistory()">🗑️ 清空所有记录</button>
+    </div>
   </div>
 
-  <div id="outStock" class="tab-content active">
-    <div class="label">每箱重量 (kg)</div>
-    <input id="perBox" type="number" inputmode="decimal" min="0" placeholder="20">
-    <div class="label">需求总量</div>
-    <div class="input-group"><input id="needVal" type="number" inputmode="decimal" min="0"><select id="needUnit"><option value="box">箱</option><option value="kg">kg</option></select></div>
-    <div class="label">每托重量 (kg)</div>
-    <input id="perPalletVal" type="number" inputmode="decimal" min="0">
-    <div class="label">已出库重量 (kg)</div>
-    <input id="outedVal" type="number" inputmode="decimal" min="0" value="0">
-    <div class="label">现有零托列表 (kg)</div>
-    <div id="zeroList"><div class="zero-item"><input class="zero-input" type="number" inputmode="decimal" min="0"><button class="del" onclick="delLine(this)">×</button></div></div>
-    <button class="add-line" onclick="addZeroLine()">+ 增加零托</button>
-    <button class="btn" onclick="calcOutStock()">计算并保存</button>
-    <div class="res" id="resultStock"></div>
+  <div class="modal" id="tagModal">
+    <div class="modal-content">
+      <div class="modal-title" id="modalTitle">添加标签</div>
+      <input type="text" class="modal-input" id="modalInput" placeholder="输入后回车确认">
+      <div class="modal-actions">
+        <button class="modal-btn cancel" onclick="closeModal()">取消</button>
+        <button class="modal-btn confirm" onclick="confirmModal()">确定</button>
+      </div>
+    </div>
   </div>
-
-  <div id="splitCalc" class="tab-content">
-    <div class="label">顾客需求</div>
-    <div class="input-group"><input id="splitNeedVal" type="number" inputmode="decimal" min="0"><select id="splitNeedUnit"><option value="kg">kg</option><option value="box">箱</option></select></div>
-    <div class="label">托盘总重</div>
-    <div class="input-group"><input id="splitTotalVal" type="number" inputmode="decimal" min="0"><select id="splitTotalUnit"><option value="kg">kg</option><option value="box">箱</option></select></div>
-    <div class="label">每箱重量</div>
-    <input id="splitPerBox" type="number" inputmode="decimal" min="0" placeholder="20">
-    <button class="btn" onclick="calcSplit()">计算并保存</button>
-    <div class="res" id="resultSplit"></div>
-  </div>
-
-  <div id="divCalc" class="tab-content">
-    <div class="label">被除数</div><input id="dividend" type="number" inputmode="decimal" min="0">
-    <div class="label">除数</div><input id="divisor" type="number" inputmode="decimal" min="0">
-    <button class="btn" onclick="calcDiv()">计算商余</button>
-    <div class="res" id="resultDiv"></div>
-  </div>
-
-  <div id="historyTab" class="tab-content">
-    <div id="historyList"></div>
-    <button class="btn" style="background:#ff3b30" onclick="clearHistory()">清空所有记录</button>
-  </div>
-</div>
 
 <script>
-// 选项卡切换
-document.querySelectorAll('.tab').forEach(t=>{ t.onclick=function(){
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
-    this.classList.add('active');
-    document.getElementById(this.dataset.target).classList.add('active');
-    if(this.dataset.target==='historyTab') renderHistory();
-}});
+  let currentFilter = 'all';
+  let modalTarget = null;
+  let modalRecordIndex = null;
 
-function addZeroLine(){
-    let d=document.createElement('div'); d.className='zero-item';
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.onclick=function(){
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById(this.dataset.target).classList.add('active');
+      if(this.dataset.target==='historyTab') renderHistory();
+    }
+  });
+
+  function addZeroLine(){
+    let d=document.createElement('div');
+    d.className='zero-item';
     d.innerHTML='<input class="zero-input" type="number" inputmode="decimal" min="0"><button class="del" onclick="delLine(this)">×</button>';
     document.getElementById('zeroList').appendChild(d);
-}
-function delLine(btn){ if(document.querySelectorAll('.zero-item').length>1) btn.parentElement.remove() }
+  }
 
-// 存储与历史
-function saveRecord(res){
-    let history = JSON.parse(localStorage.getItem('myHistory') || '[]');
-    history.unshift({ time: new Date().toLocaleTimeString(), res: res, note: '' });
-    localStorage.setItem('myHistory', JSON.stringify(history.slice(0, 50)));
-}
-function renderHistory(){
-    let history = JSON.parse(localStorage.getItem('myHistory') || '[]');
-    document.getElementById('historyList').innerHTML = history.map((h, i) => `
-        <div class="history-item">
-            <div><strong>${h.time}</strong></div>
-            <div>${h.res.replace(/\n/g, '<br>')}</div>
-            <input type="text" placeholder="添加备注..." value="${h.note}" onchange="updateNote(${i}, this.value)">
-        </div>
-    `).join('');
-}
-function updateNote(i, val){
-    let h = JSON.parse(localStorage.getItem('myHistory'));
-    h[i].note = val;
-    localStorage.setItem('myHistory', JSON.stringify(h));
-}
-function clearHistory(){ if(confirm('确定清空所有记录吗？')) { localStorage.removeItem('myHistory'); renderHistory(); } }
+  function delLine(btn){
+    if(document.querySelectorAll('.zero-item').length>1) btn.parentElement.remove()
+  }
 
-// 计算逻辑
-function calcOutStock(){
+  function getHistory(){
+    let data = localStorage.getItem('myHistory');
+    if(!data) return [];
+    return JSON.parse(data).map(h => ({
+      ...h,
+      tags: h.tags || [],
+      customer: h.customer || '',
+      params: h.params || null
+    }));
+  }
+
+  function saveHistory(history){
+    localStorage.setItem('myHistory', JSON.stringify(history.slice(0, 100)));
+  }
+
+  function saveRecord(res, type, params){
+    let history = getHistory();
+    history.unshift({
+      time: new Date().toLocaleString('zh-CN'),
+      timestamp: Date.now(),
+      type: type,
+      result: res,
+      tags: [],
+      customer: '',
+      params: params,
+      note: ''
+    });
+    saveHistory(history);
+  }
+
+  function showSaveFeedback(){
+    let feedback = document.createElement('span');
+    feedback.className = 'save-feedback show';
+    feedback.textContent = '✓ 已保存';
+    document.querySelector('.tab.active').parentElement.appendChild(feedback);
+    setTimeout(()=>feedback.remove(), 2000);
+  }
+
+  function calcOutStock(){
     let pBox = Number(document.getElementById('perBox').value)||0;
     if(!pBox){alert('请填写每箱重量');return;}
-    let totalNeed = (document.getElementById('needUnit').value === 'box') ? Number(document.getElementById('needVal').value) * pBox : Number(document.getElementById('needVal').value);
+    let needVal = Number(document.getElementById('needVal').value)||0;
+    let needUnit = document.getElementById('needUnit').value;
+    let totalNeed = needUnit === 'box' ? needVal * pBox : needVal;
+    
     let perT = Number(document.getElementById('perPalletVal').value)||0;
     if(!perT){alert('请填写每托重量');return;}
-    let zeroTotal = 0; document.querySelectorAll('.zero-input').forEach(i=>zeroTotal+=Number(i.value)||0);
     
-    let still = Math.max(totalNeed - Number(document.getElementById('outedVal').value), 0);
+    let outedVal = Number(document.getElementById('outedVal').value)||0;
+    let zeroInputs = document.querySelectorAll('.zero-input');
+    let zeroList = Array.from(zeroInputs).map(i => Number(i.value)||0);
+    let zeroTotal = zeroList.reduce((a,b)=>a+b, 0);
+    
+    let still = Math.max(totalNeed - outedVal, 0);
     let useFromZero = Math.min(still, zeroTotal);
     let leftNeed = still - useFromZero;
     let fullNum = Math.floor(leftNeed / perT);
     let needSplit = leftNeed % perT;
     
-    const toStr = (kg) => `${kg.toFixed(2)} kg / ${(kg/pBox).toFixed(2)} 箱`;
+    let params = { pBox, needVal, needUnit, perT, outedVal, zeroList };
     
-    let res = `补货明细：\n1. 消耗零托：${toStr(useFromZero)}`;
-    if(fullNum > 0) res += `\n2. 出整托：${fullNum} 托`;
+    let html = '';
     
-    let summary = `【汇总】需出库：${fullNum} 整托`;
-    if(useFromZero > 0) summary += ` + ${useFromZero.toFixed(2)}kg 零托`;
-    
-    if(needSplit > 0) {
-        res += `\n3. 需拆整托：拆开1托(${toStr(perT)})给顾客 ${toStr(needSplit)}，留存 ${toStr(perT - needSplit)} 回库。`;
-        summary += ` + 1 托拆分（给顾客${needSplit.toFixed(2)}kg，留存${(perT-needSplit).toFixed(2)}kg）`;
+    if(useFromZero > 0){
+      html += `<div class="result-card blue">
+        <div><strong>🔵 消耗零托</strong></div>
+        <span class="result-num">${useFromZero.toFixed(2)}</span> kg / <span class="result-num">${(useFromZero/pBox).toFixed(2)}</span> 箱
+      </div>`;
     }
     
-    let finalHtml = res + `<div class="summary-box">${summary}</div>`;
-    document.getElementById('resultStock').innerHTML = finalHtml;
-    saveRecord(finalHtml);
-}
+    if(fullNum > 0){
+      html += `<div class="result-card green">
+        <div><strong>🟢 出整托</strong></div>
+        <span class="result-num">${fullNum}</span> 托 / <span class="result-num">${(fullNum*perT).toFixed(2)}</span> kg
+      </div>`;
+    }
+    
+    if(needSplit > 0){
+      html += `<div class="result-card orange">
+        <div><strong>🟠 需拆整托</strong></div>
+        给顾客：<span class="result-num">${needSplit.toFixed(2)}</span> kg，留存：<span class="result-num">${(perT-needSplit).toFixed(2)}</span> kg
+      </div>`;
+    }
+    
+    html += `<div class="summary-box">
+      汇总：<span class="result-num">${fullNum}</span> 整托
+      ${useFromZero > 0 ? `+ <span class="result-num">${useFromZero.toFixed(2)}</span>kg 零托` : ''}
+      ${needSplit > 0 ? `+ <span class="result-num">1</span> 托拆分` : ''}
+    </div>`;
+    
+    document.getElementById('resultStock').innerHTML = html;
+    saveRecord(html, 'outStock', params);
+    showSaveFeedback();
+  }
 
-function calcSplit(){
+  function calcSplit(){
     let pBox = Number(document.getElementById('splitPerBox').value)||0;
     if(!pBox){alert('请填写每箱重量'); return;}
-    let nKg = (document.getElementById('splitNeedUnit').value === 'box') ? Number(document.getElementById('splitNeedVal').value) * pBox : Number(document.getElementById('splitNeedVal').value);
-    let tKg = (document.getElementById('splitTotalUnit').value === 'box') ? Number(document.getElementById('splitTotalVal').value) * pBox : Number(document.getElementById('splitTotalVal').value);
-    const toBoxStr = (kg) => `${Math.floor(kg/pBox)} 箱 + ${(kg%pBox).toFixed(2)} kg`;
-    let res = `【拆零结果】\n出库：${nKg.toFixed(2)} kg (${toBoxStr(nKg)})\n留存：${(tKg-nKg).toFixed(2)} kg (${toBoxStr(tKg-nKg)})`;
-    document.getElementById('resultSplit').innerText = res;
-    saveRecord(res);
-}
+    let nVal = Number(document.getElementById('splitNeedVal').value)||0;
+    let nUnit = document.getElementById('splitNeedUnit').value;
+    let nKg = nUnit === 'box' ? nVal * pBox : nVal;
+    
+    let tVal = Number(document.getElementById('splitTotalVal').value)||0;
+    let tUnit = document.getElementById('splitTotalUnit').value;
+    let tKg = tUnit === 'box' ? tVal * pBox : tVal;
+    
+    let params = { pBox, needVal: nVal, needUnit: nUnit, totalVal: tVal, totalUnit: tUnit };
+    
+    let html = `<div class="result-card purple">
+      <div><strong>🔵 出库</strong></div>
+      <span class="result-num">${nKg.toFixed(2)}</span> kg / ${Math.floor(nKg/pBox)} 箱 + ${(nKg%pBox).toFixed(2)} kg
+    </div>
+    <div class="result-card green">
+      <div><strong>🟢 留存</strong></div>
+      <span class="result-num">${(tKg-nKg).toFixed(2)}</span> kg / ${Math.floor((tKg-nKg)/pBox)} 箱 + ${((tKg-nKg)%pBox).toFixed(2)} kg
+    </div>`;
+    
+    document.getElementById('resultSplit').innerHTML = html;
+    saveRecord(html, 'splitCalc', params);
+    showSaveFeedback();
+  }
 
-function calcDiv(){
-    let a=Number(document.getElementById('dividend').value), b=Number(document.getElementById('divisor').value);
+  function calcDiv(){
+    let a=Number(document.getElementById('dividend').value)||0; 
+    let b=Number(document.getElementById('divisor').value)||0;
     if(!b){alert('除数不能为0');return;}
-    let res = `除法结果：${a} ÷ ${b} = ${Math.floor(a/b)} 余 ${a%b}`;
-    document.getElementById('resultDiv').innerText = res;
-    saveRecord(res);
-}
+    
+    let params = { dividend: a, divisor: b };
+    let quotient = Math.floor(a/b);
+    let remainder = a % b;
+    
+    let html = `<div class="result-card purple">
+      <div><strong>🧮 ${a} ÷ ${b}</strong></div>
+      商：<span class="result-num">${quotient}</span>，余：<span class="result-num">${remainder}</span>
+    </div>`;
+    
+    document.getElementById('resultDiv').innerHTML = html;
+    saveRecord(html, 'divCalc', params);
+    showSaveFeedback();
+  }
+
+  function renderHistory(){
+    let history = getHistory();
+    let searchText = document.getElementById('searchInput').value.toLowerCase();
+    
+    let filtered = history.filter(h => {
+      if(currentFilter !== 'all' && h.type !== currentFilter) return false;
+      if(!searchText) return true;
+      let searchContent = [
+        h.note || '',
+        h.customer || '',
+        h.tags ? h.tags.join(' ') : '',
+        h.result || ''
+      ].join(' ').toLowerCase();
+      return searchContent.includes(searchText);
+    });
+    
+    let list = document.getElementById('historyList');
+    
+    if(filtered.length === 0){
+      list.innerHTML = '<div class="empty-state">暂无记录</div>';
+      return;
+    }
+    
+    let typeNames = { outStock: '出库', splitCalc: '拆零', divCalc: '除法' };
+    
+    list.innerHTML = filtered.map((h, i) => {
+      let realIndex = history.indexOf(h);
+      let tagsHtml = h.tags.map(t => `<span class="tag tag-label">${t}<span style="cursor:pointer;margin-left:3px" onclick="removeTag(${realIndex},'${t}')">×</span></span>`).join('');
+      let customerHtml = h.customer ? `<span class="tag tag-customer">🏷️ ${h.customer}</span>` : '';
+      
+      let paramsHtml = '';
+      if(h.params){
+        if(h.type === 'outStock'){
+          let p = h.params;
+          paramsHtml = `<div class="history-params">
+            <div class="param-row"><span>每箱重量</span><span>${p.pBox} kg</span></div>
+            <div class="param-row"><span>需求</span><span>${p.needVal} ${p.needUnit === 'box' ? '箱' : 'kg'}</span></div>
+            <div class="param-row"><span>每托重量</span><span>${p.perT} kg</span></div>
+            <div class="param-row"><span>已出库</span><span>${p.outedVal} kg</span></div>
+            <div class="param-row"><span>零托列表</span><span>${p.zeroList.filter(z=>z>0).join(', ') || '无'} kg</span></div>
+          </div>`;
+        } else if(h.type === 'splitCalc'){
+          let p = h.params;
+          paramsHtml = `<div class="history-params">
+            <div class="param-row"><span>每箱重量</span><span>${p.pBox} kg</span></div>
+            <div class="param-row"><span>顾客需求</span><span>${p.needVal} ${p.needUnit === 'box' ? '箱' : 'kg'}</span></div>
+            <div class="param-row"><span>托盘总重</span><span>${p.totalVal} ${p.totalUnit === 'box' ? '箱' : 'kg'}</span></div>
+          </div>`;
+        } else if(h.type === 'divCalc'){
+          let p = h.params;
+          paramsHtml = `<div class="history-params">
+            <div class="param-row"><span>被除数</span><span>${p.dividend}</span></div>
+            <div class="param-row"><span>除数</span><span>${p.divisor}</span></div>
+          </div>`;
+        }
+      }
+      
+      return `<div class="history-item">
+        <div><strong>${h.time}</strong> <span style="background:#007aff;color:white;padding:1px 6px;border-radius:4px;font-size:10px">${typeNames[h.type]}</span></div>
+        ${h.tags.length || h.customer ? `<div class="history-tags">${customerHtml}${tagsHtml}</div>` : ''}
+        <div>${h.result}</div>
+        ${paramsHtml ? `<div class="history-expand" onclick="toggleParams(this)">▸ 查看输入参数</div>` : ''}
+        ${paramsHtml}
+        <div class="history-actions">
+          <button class="history-btn" style="background:#e5e5e5" onclick="openModal('customer', ${realIndex})">🏷️ 客户</button>
+          <button class="history-btn" style="background:#e5e5e5" onclick="openModal('tag', ${realIndex})">📌 标签</button>
+          <button class="history-btn backfill" onclick="backfillRecord(${realIndex})">🔄 回填</button>
+          <button class="history-btn delete" onclick="deleteRecord(${realIndex})">🗑️ 删除</button>
+        </div>
+        <input type="text" class="note-input" placeholder="添加备注..." value="${h.note || ''}" onchange="updateNote(${realIndex}, this.value)">
+      </div>`;
+    }).join('');
+  }
+
+  function toggleParams(el){
+    let params = el.nextElementSibling;
+    if(params && params.classList.contains('history-params')){
+      params.classList.toggle('show');
+      el.textContent = params.classList.contains('show') ? '▾ 收起参数' : '▸ 查看输入参数';
+    }
+  }
+
+  function setFilter(type){
+    currentFilter = type;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.filter-btn[data-filter="${type}"]`).classList.add('active');
+    renderHistory();
+  }
+
+  function openModal(target, index){
+    modalTarget = target;
+    modalRecordIndex = index;
+    let modal = document.getElementById('tagModal');
+    let input = document.getElementById('modalInput');
+    let title = document.getElementById('modalTitle');
+    
+    if(target === 'customer'){
+      title.textContent = '🏷️ 添加客户名称';
+      let history = getHistory();
+      input.value = history[index].customer || '';
+    } else {
+      title.textContent = '📌 添加标签（逗号分隔多个）';
+      input.value = '';
+    }
+    
+    modal.classList.add('show');
+    input.focus();
+  }
+
+  function closeModal(){
+    document.getElementById('tagModal').classList.remove('show');
+    modalTarget = null;
+    modalRecordIndex = null;
+  }
+
+  function confirmModal(){
+    let value = document.getElementById('modalInput').value.trim();
+    if(!value) { closeModal(); return; }
+    
+    let history = getHistory();
+    let record = history[modalRecordIndex];
+    
+    if(modalTarget === 'customer'){
+      record.customer = value;
+    } else {
+      let newTags = value.split(/[,，]/).map(t => t.trim()).filter(t => t);
+      record.tags = [...new Set([...record.tags, ...newTags])];
+    }
+    
+    saveHistory(history);
+    closeModal();
+    renderHistory();
+  }
+
+  document.getElementById('modalInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') confirmModal();
+    if(e.key === 'Escape') closeModal();
+  });
+
+  function removeTag(index, tag){
+    let history = getHistory();
+    history[index].tags = history[index].tags.filter(t => t !== tag);
+    saveHistory(history);
+    renderHistory();
+  }
+
+  function updateNote(index, value){
+    let history = getHistory();
+    history[index].note = value;
+    saveHistory(history);
+  }
+
+  function deleteRecord(index){
+    if(!confirm('确定删除此记录？')) return;
+    let history = getHistory();
+    history.splice(index, 1);
+    saveHistory(history);
+    renderHistory();
+  }
+
+  function clearHistory(){
+    if(confirm('确定清空所有记录吗？此操作不可恢复！')) {
+      localStorage.removeItem('myHistory');
+      renderHistory();
+    }
+  }
+
+  function backfillRecord(index){
+    let history = getHistory();
+    let record = history[index];
+    
+    if(record.type === 'outStock' && record.params){
+      let p = record.params;
+      document.getElementById('perBox').value = p.pBox;
+      document.getElementById('needVal').value = p.needVal;
+      document.getElementById('needUnit').value = p.needUnit;
+      document.getElementById('perPalletVal').value = p.perT;
+      document.getElementById('outedVal').value = p.outedVal;
+      
+      let zeroList = document.getElementById('zeroList');
+      zeroList.innerHTML = '';
+      p.zeroList.forEach((val, i) => {
+        let div = document.createElement('div');
+        div.className = 'zero-item';
+        div.innerHTML = `<input class="zero-input" type="number" value="${val}"><button class="del" onclick="delLine(this)">×</button>`;
+        zeroList.appendChild(div);
+      });
+      if(p.zeroList.length === 0 || p.zeroList.every(z => z === 0)){
+        addZeroLine();
+      }
+      
+      document.querySelector('[data-target="outStock"]').click();
+      document.getElementById('resultStock').innerHTML = '';
+      
+    } else if(record.type === 'splitCalc' && record.params){
+      let p = record.params;
+      document.getElementById('splitPerBox').value = p.pBox;
+      document.getElementById('splitNeedVal').value = p.needVal;
+      document.getElementById('splitNeedUnit').value = p.needUnit;
+      document.getElementById('splitTotalVal').value = p.totalVal;
+      document.getElementById('splitTotalUnit').value = p.totalUnit;
+      
+      document.querySelector('[data-target="splitCalc"]').click();
+      document.getElementById('resultSplit').innerHTML = '';
+      
+    } else if(record.type === 'divCalc' && record.params){
+      let p = record.params;
+      document.getElementById('dividend').value = p.dividend;
+      document.getElementById('divisor').value = p.divisor;
+      
+      document.querySelector('[data-target="divCalc"]').click();
+      document.getElementById('resultDiv').innerHTML = '';
+    }
+  }
+
+  function exportCSV(){
+    let history = getHistory();
+    if(history.length === 0){
+      alert('暂无记录可导出');
+      return;
+    }
+    
+    let typeNames = { outStock: '出库', splitCalc: '拆零', divCalc: '除法' };
+    let BOM = '\uFEFF';
+    let csv = BOM + '时间,类型,客户,标签,备注\n';
+    
+    history.forEach(h => {
+      let summary = h.result.replace(/<[^>]+>/g, '').replace(/\n/g, ' ').substring(0, 100);
+      let row = [
+        h.time,
+        typeNames[h.type] || h.type,
+        h.customer || '',
+        (h.tags || []).join(';'),
+        (h.note || '').replace(/"/g, '""')
+      ];
+      csv += '"' + row.join('","') + '"\n';
+    });
+    
+    let blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = `原料计算记录_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 </script>
 </body>
 </html>
