@@ -253,36 +253,48 @@
     let leftNeed = still - useFromZero;
     let fullNum = Math.floor(leftNeed / perT);
     let needSplit = leftNeed % perT;
+    let originalSplit = needSplit;
+    let extraKg = 0;
+    
+    if(needSplit > 0){
+      let needBoxes = Math.ceil(needSplit / pBox);
+      needSplit = needBoxes * pBox;
+      extraKg = needSplit - originalSplit;
+    }
     
     let params = { pBox, needVal, needUnit, perT, outedVal, zeroList };
     
     let html = '';
     
     if(useFromZero > 0){
+      let useBoxes = Math.round(useFromZero / pBox);
       html += `<div class="result-card blue">
         <div><strong>🔵 消耗零托</strong></div>
-        <span class="result-num">${useFromZero.toFixed(2)}</span> kg / <span class="result-num">${(useFromZero/pBox).toFixed(2)}</span> 箱
+        <span class="result-num">${useFromZero.toFixed(0)}</span> kg（${useBoxes} 箱）
       </div>`;
     }
     
     if(fullNum > 0){
       html += `<div class="result-card green">
         <div><strong>🟢 出整托</strong></div>
-        <span class="result-num">${fullNum}</span> 托 / <span class="result-num">${(fullNum*perT).toFixed(2)}</span> kg
+        <span class="result-num">${fullNum}</span> 托 / <span class="result-num">${(fullNum*perT).toFixed(0)}</span> kg
       </div>`;
     }
     
     if(needSplit > 0){
+      let giveBoxes = Math.round(needSplit / pBox);
       html += `<div class="result-card orange">
         <div><strong>🟠 需拆整托</strong></div>
-        给顾客：<span class="result-num">${needSplit.toFixed(2)}</span> kg，留存：<span class="result-num">${(perT-needSplit).toFixed(2)}</span> kg
+        给顾客：<span class="result-num">${needSplit.toFixed(0)}</span> kg（${giveBoxes} 箱），留存：<span class="result-num">${(perT-needSplit).toFixed(0)}</span> kg
+        ${extraKg > 0 ? `<div style="color:#dc2626;font-weight:bold;margin-top:4px">⚠️ 多给: ${extraKg.toFixed(0)} kg</div>` : ''}
       </div>`;
     }
     
     html += `<div class="summary-box">
       汇总：<span class="result-num">${fullNum}</span> 整托
-      ${useFromZero > 0 ? `+ <span class="result-num">${useFromZero.toFixed(2)}</span>kg 零托` : ''}
-      ${needSplit > 0 ? `+ <span class="result-num">1</span> 托拆分` : ''}
+      ${useFromZero > 0 ? `+ <span class="result-num">${useFromZero.toFixed(0)}</span>kg 零托` : ''}
+      ${needSplit > 0 ? `+ <span class="result-num">1</span> 托拆分（${Math.round(needSplit/pBox)}箱）` : ''}
+      ${extraKg > 0 ? `<div style="color:#dc2626">⚠️ 多给: ${extraKg.toFixed(0)} kg</div>` : ''}
     </div>`;
     
     document.getElementById('resultStock').innerHTML = html;
