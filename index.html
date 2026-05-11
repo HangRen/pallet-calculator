@@ -13,8 +13,9 @@
     .input-group{display:flex; align-items:center; gap:8px; margin-bottom:8px}
     input, select{flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:16px}
     select{flex:0 0 75px; background:#f8f9fa}
-    .btn{width:100%; padding:12px; background:#007aff; color:white; border:none; border-radius:8px; margin:16px 0; font-size:16px; cursor:pointer}
+    .btn{width:100%; padding:12px; background:#007aff; color:white; border:none; border-radius:8px; margin:8px 0; font-size:16px; cursor:pointer}
     .btn-export{background:#5856d6}
+    .btn-clear{background:#9ca3af;margin-top:0!important}
     .res{margin-top:12px; padding:12px; background:#eef7ff; border-radius:8px; line-height:1.6; font-size:14px}
     .summary-box{margin-top:10px; padding:10px; background:#fff3cd; border:2px solid #ffc107; border-radius:8px; color:#856404; font-weight:bold; font-size:14px}
     .tab-wrap{display:flex; margin-bottom:12px; border-radius:8px; overflow:hidden; border:1px solid #ddd}
@@ -104,6 +105,7 @@
       <button class="add-line" onclick="addZeroLine()">+ 增加零托</button>
       
       <button class="btn" onclick="calcOutStock()">计算并保存</button>
+      <button class="btn btn-clear" onclick="clearOutStock()">🗑️ 清空输入</button>
       <div id="resultStock"></div>
     </div>
 
@@ -130,6 +132,7 @@
       <input id="splitPerBox" type="number" inputmode="decimal" min="0" placeholder="20">
       
       <button class="btn" onclick="calcSplit()">计算并保存</button>
+      <button class="btn btn-clear" onclick="clearSplit()">🗑️ 清空输入</button>
       <div id="resultSplit"></div>
     </div>
 
@@ -139,6 +142,7 @@
       <div class="label">除数</div>
       <input id="divisor" type="number" inputmode="decimal" min="0">
       <button class="btn" onclick="calcDiv()">计算商余</button>
+      <button class="btn btn-clear" onclick="clearDiv()">🗑️ 清空输入</button>
       <div id="resultDiv"></div>
     </div>
 
@@ -193,6 +197,31 @@
 
   function delLine(btn){
     if(document.querySelectorAll('.zero-item').length>1) btn.parentElement.remove()
+  }
+
+  function clearOutStock(){
+    document.getElementById('perBox').value = '';
+    document.getElementById('needVal').value = '';
+    document.getElementById('needUnit').value = 'box';
+    document.getElementById('perPalletVal').value = '';
+    document.getElementById('outedVal').value = '0';
+    document.getElementById('zeroList').innerHTML = '<div class="zero-item"><input class="zero-input" type="number" inputmode="decimal" min="0"><button class="del" onclick="delLine(this)">×</button></div>';
+    document.getElementById('resultStock').innerHTML = '';
+  }
+
+  function clearSplit(){
+    document.getElementById('splitNeedVal').value = '';
+    document.getElementById('splitNeedUnit').value = 'kg';
+    document.getElementById('splitTotalVal').value = '';
+    document.getElementById('splitTotalUnit').value = 'kg';
+    document.getElementById('splitPerBox').value = '';
+    document.getElementById('resultSplit').innerHTML = '';
+  }
+
+  function clearDiv(){
+    document.getElementById('dividend').value = '';
+    document.getElementById('divisor').value = '';
+    document.getElementById('resultDiv').innerHTML = '';
   }
 
   function getHistory(){
