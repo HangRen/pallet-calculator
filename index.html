@@ -10,13 +10,11 @@
     .card{background:white; border-radius:12px; padding:16px; box-shadow:0 2px 8px #0001}
     h2{text-align:center; margin:0 0 12px; font-size:18px}
     .label{font-size:14px; color:#555; margin:8px 0 4px}
-    .label .required{color:#ff3b30}
     .input-group{display:flex; align-items:center; gap:8px; margin-bottom:8px}
     input, select{flex:1; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:16px}
     select{flex:0 0 75px; background:#f8f9fa}
-    .btn{width:100%; padding:12px; background:#007aff; color:white; border:none; border-radius:8px; margin:8px 0; font-size:16px; cursor:pointer}
+    .btn{width:100%; padding:12px; background:#007aff; color:white; border:none; border-radius:8px; margin:16px 0; font-size:16px; cursor:pointer}
     .btn-export{background:#5856d6}
-    .btn-clear{background:#9ca3af;margin-top:0!important}
     .res{margin-top:12px; padding:12px; background:#eef7ff; border-radius:8px; line-height:1.6; font-size:14px}
     .summary-box{margin-top:10px; padding:10px; background:#fff3cd; border:2px solid #ffc107; border-radius:8px; color:#856404; font-weight:bold; font-size:14px}
     .tab-wrap{display:flex; margin-bottom:12px; border-radius:8px; overflow:hidden; border:1px solid #ddd}
@@ -64,6 +62,8 @@
     .empty-state{text-align:center; padding:30px; color:#999}
     .save-feedback{color:#22c55e; font-size:12px; margin-left:8px; opacity:0; transition:opacity 0.3s}
     .save-feedback.show{opacity:1}
+    .required{color:#ff3b30; font-weight:bold}
+    .btn-clear{background:#ff9500}
   </style>
 </head>
 <body>
@@ -73,7 +73,7 @@
     <div class="tab-wrap">
       <div class="tab active" data-target="outStock">出库</div>
       <div class="tab" data-target="splitCalc">拆零</div>
-      <div class="tab" data-target="arrivalCalc">到货</div>
+      <div class="tab" data-target="divCalc">到货</div>
       <div class="tab" data-target="historyTab">记录</div>
     </div>
 
@@ -106,7 +106,6 @@
       <button class="add-line" onclick="addZeroLine()">+ 增加零托</button>
       
       <button class="btn" onclick="calcOutStock()">计算并保存</button>
-      <button class="btn btn-clear" onclick="clearOutStock()">🗑️ 清空输入</button>
       <div id="resultStock"></div>
     </div>
 
@@ -133,32 +132,25 @@
       <input id="splitPerBox" type="number" inputmode="decimal" min="0" placeholder="20">
       
       <button class="btn" onclick="calcSplit()">计算并保存</button>
-      <button class="btn btn-clear" onclick="clearSplit()">🗑️ 清空输入</button>
       <div id="resultSplit"></div>
     </div>
 
-    <div id="arrivalCalc" class="tab-content">
+    <div id="divCalc" class="tab-content">
+      <div class="label">总重量 <span class="required">*</span></div>
+      <input id="arrivalTotal" type="number" inputmode="decimal" min="0" placeholder="必填">
+      <div class="label">每箱重量 (kg) <span class="required">*</span></div>
+      <input id="arrivalPerBox" type="number" inputmode="decimal" min="0" placeholder="必填">
+      <div class="label">每托箱数 <span class="required">*</span></div>
+      <input id="arrivalPerPallet" type="number" inputmode="decimal" min="0" placeholder="必填">
       <div class="label">实物品名</div>
-      <input id="itemName" type="text" placeholder="请输入实物品名（可选）">
-      
+      <input id="arrivalName" type="text" placeholder="选填">
       <div class="label">实物批号</div>
-      <input id="batchNo" type="text" placeholder="请输入实物批号（可选）">
-      
-      <div class="label"><span class="required">* </span>总重量 (kg)</div>
-      <input id="totalWeight" type="number" inputmode="decimal" min="0" placeholder="请输入总重量">
-      
+      <input id="arrivalBatch" type="text" placeholder="选填">
       <div class="label">实物厂家</div>
-      <input id="manufacturer" type="text" placeholder="请输入实物厂家（可选）">
-      
-      <div class="label"><span class="required">* </span>每箱重量 (kg)</div>
-      <input id="boxWeight" type="number" inputmode="decimal" min="0" placeholder="请输入每箱重量">
-      
-      <div class="label"><span class="required">* </span>每托箱数</div>
-      <input id="boxesPerPallet" type="number" inputmode="decimal" min="0" placeholder="请输入每托箱数">
-      
-      <button class="btn" onclick="calcArrival()">计算并保存</button>
-      <button class="btn btn-clear" onclick="clearArrival()">🗑️ 清空输入</button>
-      <div id="resultArrival"></div>
+      <input id="arrivalFactory" type="text" placeholder="选填">
+      <button class="btn" onclick="calcArrival()">计算</button>
+      <div id="resultDiv"></div>
+      <button class="btn btn-clear" onclick="clearArrival()">清空</button>
     </div>
 
     <div id="historyTab" class="tab-content">
@@ -169,7 +161,7 @@
         <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</button>
         <button class="filter-btn" data-filter="outStock" onclick="setFilter('outStock')">出库</button>
         <button class="filter-btn" data-filter="splitCalc" onclick="setFilter('splitCalc')">拆零</button>
-        <button class="filter-btn" data-filter="arrivalCalc" onclick="setFilter('arrivalCalc')">到货</button>
+        <button class="filter-btn" data-filter="arrival" onclick="setFilter('arrival')">到货</button>
       </div>
       <button class="btn btn-export" onclick="exportCSV()">📥 导出 CSV</button>
       <div id="historyList"></div>
@@ -212,35 +204,6 @@
 
   function delLine(btn){
     if(document.querySelectorAll('.zero-item').length>1) btn.parentElement.remove()
-  }
-
-  function clearOutStock(){
-    document.getElementById('perBox').value = '';
-    document.getElementById('needVal').value = '';
-    document.getElementById('needUnit').value = 'box';
-    document.getElementById('perPalletVal').value = '';
-    document.getElementById('outedVal').value = '0';
-    document.getElementById('zeroList').innerHTML = '<div class="zero-item"><input class="zero-input" type="number" inputmode="decimal" min="0"><button class="del" onclick="delLine(this)">×</button></div>';
-    document.getElementById('resultStock').innerHTML = '';
-  }
-
-  function clearSplit(){
-    document.getElementById('splitNeedVal').value = '';
-    document.getElementById('splitNeedUnit').value = 'kg';
-    document.getElementById('splitTotalVal').value = '';
-    document.getElementById('splitTotalUnit').value = 'kg';
-    document.getElementById('splitPerBox').value = '';
-    document.getElementById('resultSplit').innerHTML = '';
-  }
-
-  function clearArrival(){
-    document.getElementById('itemName').value = '';
-    document.getElementById('batchNo').value = '';
-    document.getElementById('totalWeight').value = '';
-    document.getElementById('manufacturer').value = '';
-    document.getElementById('boxWeight').value = '';
-    document.getElementById('boxesPerPallet').value = '';
-    document.getElementById('resultArrival').innerHTML = '';
   }
 
   function getHistory(){
@@ -378,61 +341,62 @@
   }
 
   function calcArrival(){
-    let totalWeight = Number(document.getElementById('totalWeight').value)||0;
-    if(!totalWeight){alert('请填写总重量');return;}
+    let total = Number(document.getElementById('arrivalTotal').value);
+    let perBox = Number(document.getElementById('arrivalPerBox').value);
+    let perPallet = Number(document.getElementById('arrivalPerPallet').value);
     
-    let boxWeight = Number(document.getElementById('boxWeight').value)||0;
-    if(!boxWeight){alert('请填写每箱重量');return;}
-    
-    let boxesPerPallet = Number(document.getElementById('boxesPerPallet').value)||0;
-    if(!boxesPerPallet){alert('请填写每托箱数');return;}
-    
-    let itemName = document.getElementById('itemName').value||'';
-    let batchNo = document.getElementById('batchNo').value||'';
-    let manufacturer = document.getElementById('manufacturer').value||'';
-    
-    let totalBoxWeight = boxWeight * boxesPerPallet;
-    let fullPallets = Math.floor(totalWeight / totalBoxWeight);
-    let remainingWeight = totalWeight % totalBoxWeight;
-    let fullBoxes = Math.floor(remainingWeight / boxWeight);
-    let looseWeight = remainingWeight % boxWeight;
-    
-    let params = { itemName, batchNo, totalWeight, manufacturer, boxWeight, boxesPerPallet };
-    
-    let html = '';
-    
-    if(itemName || batchNo || manufacturer){
-      html += `<div style="background:#f8fafc;padding:10px;border-radius:8px;margin-bottom:10px;font-size:13px">`;
-      if(itemName) html += `<div><strong>品名:</strong> ${itemName}</div>`;
-      if(batchNo) html += `<div><strong>批号:</strong> ${batchNo}</div>`;
-      if(manufacturer) html += `<div><strong>厂家:</strong> ${manufacturer}</div>`;
-      html += `</div>`;
+    if(!perBox || !perPallet){
+      alert('请填写必填项：总重量、每箱重量、每托箱数');
+      return;
     }
     
-    html += `<div class="result-card purple">
-      <div><strong>📦 到货统计</strong></div>
-      总重量：<span class="result-num">${totalWeight.toFixed(2)}</span> kg<br>
-      每托：<span class="result-num">${boxesPerPallet}</span> 箱 × <span class="result-num">${boxWeight.toFixed(2)}</span> kg = <span class="result-num">${totalBoxWeight.toFixed(2)}</span> kg
+    let name = document.getElementById('arrivalName').value;
+    let batch = document.getElementById('arrivalBatch').value;
+    let factory = document.getElementById('arrivalFactory').value;
+    
+    let unitWeight = perBox * perPallet;
+    let fullPallets = Math.floor(total / unitWeight);
+    let remainingWeight = total - (fullPallets * unitWeight);
+    let looseBoxes = Math.ceil(remainingWeight / perBox);
+    let finalWeight = looseBoxes > 0 ? remainingWeight : 0;
+    
+    let params = {
+      name: name,
+      batch: batch,
+      total: total,
+      factory: factory,
+      perBox: perBox,
+      perPallet: perPallet,
+      fullPallets: fullPallets,
+      looseBoxes: looseBoxes,
+      finalWeight: finalWeight
+    };
+    
+    let html = `<div class="result-card blue">
+      <div style="margin-bottom:8px"><strong>📦 到货信息</strong></div>
+      ${name ? `<div>品名：${name}</div>` : ''}
+      ${batch ? `<div>批号：${batch}</div>` : ''}
+      ${factory ? `<div>厂家：${factory}</div>` : ''}
+    </div>
+    <div class="result-card green">
+      <div>整托数量：<span class="result-num" style="color:#22c55e">${fullPallets}</span> 托</div>
+      <div>零箱数量：<span class="result-num" style="color:#f97316">${looseBoxes}</span> 箱</div>
+      <div>散重：<span class="result-num" style="color:#a855f7">${finalWeight.toFixed(2)}</span> kg</div>
     </div>`;
     
-    html += `<div class="result-card green">
-      <div><strong>🟢 结果</strong></div>
-      整托：<span class="result-num">${fullPallets}</span> 托<br>
-      零箱：<span class="result-num">${fullBoxes}</span> 箱
-      ${looseWeight > 0 ? `<br>散重：<span class="result-num">${looseWeight.toFixed(2)}</span> kg` : ''}
-    </div>`;
-    
-    if(remainingWeight > 0){
-      html += `<div class="summary-box">
-        汇总：<span class="result-num">${fullPallets}</span> 托
-        ${fullBoxes > 0 ? `+ <span class="result-num">${fullBoxes}</span> 箱` : ''}
-        ${looseWeight > 0 ? `+ <span class="result-num">${looseWeight.toFixed(2)}</span> kg散重` : ''}
-      </div>`;
-    }
-    
-    document.getElementById('resultArrival').innerHTML = html;
-    saveRecord(html, 'arrivalCalc', params);
+    document.getElementById('resultDiv').innerHTML = html;
+    saveRecord(html, 'arrival', params);
     showSaveFeedback();
+  }
+  
+  function clearArrival(){
+    document.getElementById('arrivalName').value = '';
+    document.getElementById('arrivalBatch').value = '';
+    document.getElementById('arrivalTotal').value = '';
+    document.getElementById('arrivalFactory').value = '';
+    document.getElementById('arrivalPerBox').value = '';
+    document.getElementById('arrivalPerPallet').value = '';
+    document.getElementById('resultDiv').innerHTML = '';
   }
 
   function renderHistory(){
@@ -458,7 +422,7 @@
       return;
     }
     
-    let typeNames = { outStock: '出库', splitCalc: '拆零', arrivalCalc: '到货' };
+    let typeNames = { outStock: '出库', splitCalc: '拆零', divCalc: '除法' };
     
     list.innerHTML = filtered.map((h, i) => {
       let realIndex = history.indexOf(h);
@@ -483,16 +447,12 @@
             <div class="param-row"><span>顾客需求</span><span>${p.needVal} ${p.needUnit === 'box' ? '箱' : 'kg'}</span></div>
             <div class="param-row"><span>托盘总重</span><span>${p.totalVal} ${p.totalUnit === 'box' ? '箱' : 'kg'}</span></div>
           </div>`;
-        } else if(h.type === 'arrivalCalc'){
+        } else if(h.type === 'divCalc'){
           let p = h.params;
-          paramsHtml = `<div class="history-params">`;
-          if(p.itemName) paramsHtml += `<div class="param-row"><span>品名</span><span>${p.itemName}</span></div>`;
-          if(p.batchNo) paramsHtml += `<div class="param-row"><span>批号</span><span>${p.batchNo}</span></div>`;
-          paramsHtml += `<div class="param-row"><span>总重量</span><span>${p.totalWeight} kg</span></div>`;
-          if(p.manufacturer) paramsHtml += `<div class="param-row"><span>厂家</span><span>${p.manufacturer}</span></div>`;
-          paramsHtml += `<div class="param-row"><span>每箱重量</span><span>${p.boxWeight} kg</span></div>`;
-          paramsHtml += `<div class="param-row"><span>每托箱数</span><span>${p.boxesPerPallet}</span></div>`;
-          paramsHtml += `</div>`;
+          paramsHtml = `<div class="history-params">
+            <div class="param-row"><span>被除数</span><span>${p.dividend}</span></div>
+            <div class="param-row"><span>除数</span><span>${p.divisor}</span></div>
+          </div>`;
         }
       }
       
@@ -644,17 +604,13 @@
       document.querySelector('[data-target="splitCalc"]').click();
       document.getElementById('resultSplit').innerHTML = '';
       
-    } else if(record.type === 'arrivalCalc' && record.params){
+    } else if(record.type === 'divCalc' && record.params){
       let p = record.params;
-      document.getElementById('itemName').value = p.itemName || '';
-      document.getElementById('batchNo').value = p.batchNo || '';
-      document.getElementById('totalWeight').value = p.totalWeight || '';
-      document.getElementById('manufacturer').value = p.manufacturer || '';
-      document.getElementById('boxWeight').value = p.boxWeight || '';
-      document.getElementById('boxesPerPallet').value = p.boxesPerPallet || '';
+      document.getElementById('dividend').value = p.dividend;
+      document.getElementById('divisor').value = p.divisor;
       
-      document.querySelector('[data-target="arrivalCalc"]').click();
-      document.getElementById('resultArrival').innerHTML = '';
+      document.querySelector('[data-target="divCalc"]').click();
+      document.getElementById('resultDiv').innerHTML = '';
     }
   }
 
@@ -665,7 +621,7 @@
       return;
     }
     
-    let typeNames = { outStock: '出库', splitCalc: '拆零', arrivalCalc: '到货' };
+    let typeNames = { outStock: '出库', splitCalc: '拆零', divCalc: '除法' };
     let BOM = '\uFEFF';
     let csv = BOM + '时间,类型,客户,标签,备注\n';
     
