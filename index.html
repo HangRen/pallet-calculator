@@ -138,23 +138,24 @@
     </div>
 
     <div id="arrivalCalc" class="tab-content">
-      <div class="label">实物品名</div>
-      <input id="itemName" type="text" placeholder="请输入实物品名（可选）">
-      
-      <div class="label">实物批号</div>
-      <input id="batchNo" type="text" placeholder="请输入实物批号（可选）">
-      
+      <!-- 已调整：必填三项移到最前面 -->
       <div class="label"><span class="required">* </span>总重量 (kg)</div>
       <input id="totalWeight" type="number" inputmode="decimal" min="0" placeholder="请输入总重量">
-      
-      <div class="label">实物厂家</div>
-      <input id="manufacturer" type="text" placeholder="请输入实物厂家（可选）">
       
       <div class="label"><span class="required">* </span>每箱重量 (kg)</div>
       <input id="boxWeight" type="number" inputmode="decimal" min="0" placeholder="请输入每箱重量">
       
       <div class="label"><span class="required">* </span>每托箱数</div>
       <input id="boxesPerPallet" type="number" inputmode="decimal" min="0" placeholder="请输入每托箱数">
+
+      <div class="label">实物品名</div>
+      <input id="itemName" type="text" placeholder="请输入实物品名（可选）">
+      
+      <div class="label">实物批号</div>
+      <input id="batchNo" type="text" placeholder="请输入实物批号（可选）">
+      
+      <div class="label">实物厂家</div>
+      <input id="manufacturer" type="text" placeholder="请输入实物厂家（可选）">
       
       <button class="btn" onclick="calcArrival()">计算并保存</button>
       <button class="btn btn-clear" onclick="clearArrival()">🗑️ 清空输入</button>
