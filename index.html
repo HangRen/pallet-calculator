@@ -360,9 +360,24 @@
       }
     });
     
-    // 排序：按差异从小到大，差异相同则总重量从小到大
+    // 排序：按差异从小到大
+    // 差异相同时：优先选择使用零托的方案（消耗零托）
+    // 都使用零托时：优先选择整托数少的
     solutions.sort((a, b) => {
       if (a.diff !== b.diff) return a.diff - b.diff;
+      
+      // 差异相同，优先选择使用零托的方案
+      if (a.zeroSum > 0 && b.zeroSum === 0) return -1;
+      if (a.zeroSum === 0 && b.zeroSum > 0) return 1;
+      
+      // 都使用或都不使用零托，优先选择整托数少的
+      if (a.fullPallets !== b.fullPallets) return a.fullPallets - b.fullPallets;
+      
+      // 都相同，优先选择不拆分的
+      if (a.splitPallet === 0 && b.splitPallet > 0) return -1;
+      if (a.splitPallet > 0 && b.splitPallet === 0) return 1;
+      
+      // 最后按总重量
       return a.total - b.total;
     });
     

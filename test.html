@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>算法测试</title>
+</head>
+<body>
+  <h1>算法测试 - 您的示例</h1>
+  <h2>参数：</h2>
+  <ul>
+    <li>每箱：10kg</li>
+    <li>整托：770kg</li>
+    <li>零托：60kg, 440kg</li>
+    <li>需求：3200kg</li>
+  </ul>
+  
+  <h2>计算结果：</h2>
+  <div id="result"></div>
+
+  <script>
+    // 生成所有零托子集（保留索引信息）
+    function getZeroSubsets(zeroList) {
+      let subsets = [];
+      let n = zeroList.length;
+      for (let mask = 0; mask < (1 << n); mask++) {
+        let sum = 0;
+        let indices = [];
+        for (let i = 0; i < n; i++) {
+          if (mask & (1 << i)) {
+            sum += zeroList[i];
+            indices.push(i);
+          }
+        }
+        subsets.push({ sum, indices });
+      }
+      return subsets;
+    }
+
+    // 计算最优解
+    function findOptimalSolution(still, zeroList, perT, pBox) {
+      let validZeros = zeroList.filter(z => z > 0);
+      let subsets = getZeroSubsets(validZeros);
+      let solutions = [];
+      
+      console.log("所有零托子集：");
+      subsets.forEach(subset => {
+        let zeroSum = subset.sum;
+        let zeroVals = subset.indices.map(i => validZeros[i]);
+        console.log(`  - ${zeroVals.join(' + ')} = ${zeroSum}kg`);
+        
+        // 情况1：仅用零托子集
+        if (zeroSum > 0) {
+          solutions.push({
+            zeroSum,
+            zeroIndices: subset.indices,
+            fullPallets: 0,
+            splitPallet: 0,
+            total: zeroSum,
+            diff: Math.abs(zeroSum - still)
+          });
+        }
+        
+        // 考虑所有可能的整托数量（从0到合理的上限）
+        let maxFull = Math.ceil((still + perT * 2) / perT); // 考虑比需求多一些的情况
+        for (let fullNum = 0; fullNum <= maxFull; fullNum++) {
+          let totalFull = zeroSum + fullNum * perT;
+          
+          // 情况2：零托 + fullNum 整托（不拆分）
+          solutions.push({
+            zeroSum,
+            zeroIndices: subset.indices,
+            fullPallets: fullNum,
+            splitPallet: 0,
+            total: totalFull,
+            diff: Math.abs(totalFull - still)
+          });
+          
+          // 情况3：零托 + fullNum 整托 + 拆分一托（如果还需要更多）
+          if (fullNum >= 0) {
+            let remainingAfterFull = still - (zeroSum + fullNum * perT);
+            if (remainingAfterFull > 0) {
+              let needBoxes = Math.ceil(remainingAfterFull / pBox);
+              let splitGive = needBoxes * pBox;
+              if (splitGive <= perT) { // 不能拆分超过一整托
+                let totalWithSplit = zeroSum + fullNum * perT + splitGive;
+                solutions.push({
+                  zeroSum,
+                  zeroIndices: subset.indices,
+                  fullPallets: fullNum,
+                  splitPallet: splitGive,
+                  total: totalWithSplit,
+                  diff: Math.abs(totalWithSplit - still)
+                });
+              }
+            }
+          }
+        }
+      });
+      
+      // 排序：按差异从小到大
+      // 差异相同时：优先选择使用零托的方案（消耗零托）
+      // 都使用零托时：优先选择整托数少的
+      solutions.sort((a, b) => {
+        if (a.diff !== b.diff) return a.diff - b.diff;
+        
+        // 差异相同，优先选择使用零托的方案
+        if (a.zeroSum > 0 && b.zeroSum === 0) return -1;
+        if (a.zeroSum === 0 && b.zeroSum > 0) return 1;
+        
+        // 都使用或都不使用零托，优先选择整托数少的
+        if (a.fullPallets !== b.fullPallets) return a.fullPallets - b.fullPallets;
+        
+        // 都相同，优先选择不拆分的
+        if (a.splitPallet === 0 && b.splitPallet > 0) return -1;
+        if (a.splitPallet > 0 && b.splitPallet === 0) return 1;
+        
+        // 最后按总重量
+        return a.total - b.total;
+      });
+      
+      // 去重（保留最优的）
+      let seen = new Set();
+      let uniqueSolutions = [];
+      for (let sol of solutions) {
+        let key = `${sol.zeroSum}-${sol.fullPallets}-${sol.splitPallet}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueSolutions.push(sol);
+        }
+        if (uniqueSolutions.length >= 5) break; // 只保留前5个最优解
+      }
+      
+      return uniqueSolutions;
+    }
+
+    // 测试
+    let pBox = 10;
+    let still = 3200;
+    let perT = 770;
+    let zeroList = [60, 440];
+
+    let solutions = findOptimalSolution(still, zeroList, perT, pBox);
+    let validZeros = zeroList.filter(z => z > 0);
+
+    let html = '';
+    solutions.forEach((sol, idx) => {
+      let isBest = idx === 0;
+      html += `<div style="border: 2px solid ${isBest ? 'green' : 'gray'}; padding: 10px; margin: 10px 0;">`;
+      html += `<h3>${isBest ? '⭐ 最优方案' : `方案 ${idx + 1}`}</h3>`;
+      
+      if (sol.zeroSum > 0) {
+        let zeroVals = sol.zeroIndices.map(i => validZeros[i]);
+        html += `<p>🔵 零托：${zeroVals.join(' + ')} = ${sol.zeroSum}kg</p>`;
+      }
+      
+      if (sol.fullPallets > 0) {
+        html += `<p>🟢 整托：${sol.fullPallets} 托 × ${perT}kg = ${sol.fullPallets * perT}kg</p>`;
+      }
+      
+      if (sol.splitPallet > 0) {
+        let giveBoxes = sol.splitPallet / pBox;
+        let remainKg = perT - sol.splitPallet;
+        html += `<p>🟠 拆分：给 ${sol.splitPallet}kg（${giveBoxes}箱），留 ${remainKg}kg</p>`;
+      }
+      
+      let diffDesc = '';
+      if (sol.total < still) {
+        diffDesc = `少 ${still - sol.total}kg`;
+      } else if (sol.total > still) {
+        diffDesc = `多 ${sol.total - still}kg`;
+      } else {
+        diffDesc = '刚好！';
+      }
+      
+      html += `<p><strong>总计：${sol.total}kg | 差异：${diffDesc}</strong></p>`;
+      html += `</div>`;
+    });
+
+    document.getElementById('result').innerHTML = html;
+  </script>
+</body>
+</html>
