@@ -300,108 +300,128 @@
     return subsets;
   }
 
-  // 计算最优解
+  // 计算最优解 - 分别考虑拆分和不拆分两种策略
   function findOptimalSolution(still, zeroList, perT, pBox) {
     let validZeros = zeroList.filter(z => z > 0);
     let subsets = getZeroSubsets(validZeros);
-    let solutions = [];
+    
+    let splitSolutions = []; // 可以拆分的方案
+    let noSplitSolutions = []; // 不拆分的方案
     
     // 对于每个零托子集
     subsets.forEach(subset => {
       let zeroSum = subset.sum;
-      let remaining = still - zeroSum;
       
-      // 情况1：仅用零托子集
-      if (zeroSum > 0) {
-        solutions.push({
+      // 情况1：仅用零托（两种策略都适用）
+      if (zeroSum > 0 && zeroSum >= still) {
+        let sol = {
           zeroSum,
           zeroIndices: subset.indices,
           fullPallets: 0,
           splitPallet: 0,
           total: zeroSum,
-          diff: Math.abs(zeroSum - still)
-        });
+          diff: zeroSum - still,
+          strategy: 'both'
+        };
+        splitSolutions.push(sol);
+        noSplitSolutions.push(sol);
       }
       
       // 考虑所有可能的整托数量（从0到合理的上限）
-      let maxFull = Math.ceil((still + perT * 2) / perT); // 考虑比需求多一些的情况
+      let maxFull = Math.ceil((still + perT * 2) / perT);
       for (let fullNum = 0; fullNum <= maxFull; fullNum++) {
-        let totalFull = zeroSum + fullNum * perT;
+        let totalNoSplit = zeroSum + fullNum * perT;
         
-        // 情况2：零托 + fullNum 整托（不拆分）
-        solutions.push({
-          zeroSum,
-          zeroIndices: subset.indices,
-          fullPallets: fullNum,
-          splitPallet: 0,
-          total: totalFull,
-          diff: Math.abs(totalFull - still)
-        });
+        // 不拆分策略：直接给，多给但最少
+        if (totalNoSplit >= still) {
+          noSplitSolutions.push({
+            zeroSum,
+            zeroIndices: subset.indices,
+            fullPallets: fullNum,
+            splitPallet: 0,
+            total: totalNoSplit,
+            diff: totalNoSplit - still,
+            strategy: 'no-split'
+          });
+        }
         
-        // 情况3：零托 + fullNum 整托 + 拆分一托（如果还需要更多）
-        if (fullNum >= 0) {
-          let remainingAfterFull = still - (zeroSum + fullNum * perT);
-          if (remainingAfterFull > 0) {
-            let needBoxes = Math.ceil(remainingAfterFull / pBox);
-            let splitGive = needBoxes * pBox;
-            if (splitGive <= perT) { // 不能拆分超过一整托
-              let totalWithSplit = zeroSum + fullNum * perT + splitGive;
-              solutions.push({
-                zeroSum,
-                zeroIndices: subset.indices,
-                fullPallets: fullNum,
-                splitPallet: splitGive,
-                total: totalWithSplit,
-                diff: Math.abs(totalWithSplit - still)
-              });
-            }
+        // 拆分策略：可以拆分
+        let remainingAfterFull = still - (zeroSum + fullNum * perT);
+        if (remainingAfterFull > 0) {
+          let needBoxes = Math.ceil(remainingAfterFull / pBox);
+          let splitGive = needBoxes * pBox;
+          if (splitGive <= perT) {
+            let totalWithSplit = zeroSum + fullNum * perT + splitGive;
+            splitSolutions.push({
+              zeroSum,
+              zeroIndices: subset.indices,
+              fullPallets: fullNum,
+              splitPallet: splitGive,
+              total: totalWithSplit,
+              diff: totalWithSplit - still,
+              strategy: 'split'
+            });
+          }
+        } else {
+          // 零托 + 整托已经够了（不拆分）
+          let total = zeroSum + fullNum * perT;
+          if (total >= still) {
+            splitSolutions.push({
+              zeroSum,
+              zeroIndices: subset.indices,
+              fullPallets: fullNum,
+              splitPallet: 0,
+              total: total,
+              diff: total - still,
+              strategy: 'split'
+            });
           }
         }
       }
     });
     
-    // 过滤掉少给的方案（不允许少给）
-    solutions = solutions.filter(sol => sol.total >= still);
-    
-    // 排序规则：
-    // 1. 优先选择正好满足需求的方案（差异为0）
-    // 2. 差异相同，优先选择拆分最少的
-    // 3. 拆分数量相同，优先选择使用零托最多的
-    // 4. 零托使用相同，优先选择整托数少的
-    solutions.sort((a, b) => {
-      // 首先按差异排序（正好满足优先于多给）
-      if (a.diff !== b.diff) return a.diff - b.diff;
-      
-      // 差异相同，优先选择拆分最少的
-      if (a.splitPallet !== b.splitPallet) {
-        return a.splitPallet - b.splitPallet;
-      }
-      
-      // 都拆分或不拆分，优先选择使用零托最多的
-      if (a.zeroSum !== b.zeroSum) {
-        return b.zeroSum - a.zeroSum;
-      }
-      
-      // 都使用或都不使用零托，优先选择整托数少的
-      if (a.fullPallets !== b.fullPallets) return a.fullPallets - b.fullPallets;
-      
-      // 最后按总重量从小到大
-      return a.total - b.total;
-    });
-    
-    // 去重（保留最优的）
-    let seen = new Set();
-    let uniqueSolutions = [];
-    for (let sol of solutions) {
-      let key = `${sol.zeroSum}-${sol.fullPallets}-${sol.splitPallet}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        uniqueSolutions.push(sol);
-      }
-      if (uniqueSolutions.length >= 3) break; // 只保留前3个最优解
+    // 对两种策略分别排序
+    function sortSolutions(solutions) {
+      return solutions.sort((a, b) => {
+        // 首先按差异排序（正好满足优先于少给）
+        if (a.diff !== b.diff) return a.diff - b.diff;
+        // 差异相同，优先选择使用零托最多的
+        if (a.zeroSum !== b.zeroSum) {
+          return b.zeroSum - a.zeroSum;
+        }
+        // 零托使用相同，优先选择整托数少的
+        if (a.fullPallets !== b.fullPallets) return a.fullPallets - b.fullPallets;
+        // 最后按总重量
+        return a.total - b.total;
+      });
     }
     
-    return uniqueSolutions;
+    splitSolutions = sortSolutions(splitSolutions);
+    noSplitSolutions = sortSolutions(noSplitSolutions);
+    
+    // 去重函数
+    function deduplicate(solutions) {
+      let seen = new Set();
+      let unique = [];
+      for (let sol of solutions) {
+        let key = `${sol.zeroSum}-${sol.fullPallets}-${sol.splitPallet}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(sol);
+        }
+        if (unique.length >= 2) break; // 每个策略保留前2个
+      }
+      return unique;
+    }
+    
+    let bestSplit = deduplicate(splitSolutions);
+    let bestNoSplit = deduplicate(noSplitSolutions);
+    
+    // 合并结果，给每个方案标记策略
+    return {
+      split: bestSplit,
+      noSplit: bestNoSplit
+    };
   }
 
   function calcOutStock(){
@@ -421,48 +441,63 @@
     let still = Math.max(totalNeed - outedVal, 0);
     let validZeros = zeroList.filter(z => z > 0);
     
-    let solutions = findOptimalSolution(still, validZeros, perT, pBox);
+    let { split: splitSolutions, noSplit: noSplitSolutions } = findOptimalSolution(still, validZeros, perT, pBox);
     
     let params = { pBox, needVal, needUnit, perT, outedVal, zeroList };
     
     let html = '';
     
-    // 显示最优解
-    solutions.forEach((sol, idx) => {
-      let isBest = idx === 0;
-      let cardClass = isBest ? 'green' : 'blue';
-      let titleClass = isBest ? '⭐ 最优方案' : `方案 ${idx + 1}`;
-      
-      html += `<div class="result-card ${cardClass}">`;
-      html += `<div><strong>${titleClass}</strong></div>`;
+    // 渲染单个方案的函数
+    function renderSolution(sol, title, cardClass, isNoSplit) {
+      let result = `<div class="result-card ${cardClass}">`;
+      result += `<div><strong>${title}</strong></div>`;
       
       if (sol.zeroSum > 0) {
         let zeroVals = sol.zeroIndices.map(i => validZeros[i].toFixed(0));
-        html += `<div>🔵 零托: ${zeroVals.join(' + ')} = ${sol.zeroSum.toFixed(0)} kg</div>`;
+        result += `<div>🔵 零托: ${zeroVals.join(' + ')} = ${sol.zeroSum.toFixed(0)} kg</div>`;
       }
       
       if (sol.fullPallets > 0) {
-        html += `<div>🟢 整托: ${sol.fullPallets} 托 × ${perT.toFixed(0)} kg = ${(sol.fullPallets * perT).toFixed(0)} kg</div>`;
+        result += `<div>🟢 整托: ${sol.fullPallets} 托 × ${perT.toFixed(0)} kg = ${(sol.fullPallets * perT).toFixed(0)} kg</div>`;
       }
       
       if (sol.splitPallet > 0) {
         let giveBoxes = Math.round(sol.splitPallet / pBox);
         let remainKg = perT - sol.splitPallet;
-        html += `<div>🟠 拆分: 给 ${sol.splitPallet.toFixed(0)} kg（${giveBoxes} 箱），留 ${remainKg.toFixed(0)} kg</div>`;
+        result += `<div>🟠 拆分: 给 ${sol.splitPallet.toFixed(0)} kg（${giveBoxes} 箱），留 ${remainKg.toFixed(0)} kg</div>`;
       }
       
       let diffDesc = '';
-      if (sol.total < still) {
-        diffDesc = `少 ${(still - sol.total).toFixed(0)} kg`;
-      } else if (sol.total > still) {
+      if (sol.total > still) {
         diffDesc = `多 ${(sol.total - still).toFixed(0)} kg`;
-      } else {
+      } else if (sol.total === still) {
         diffDesc = '刚好！';
       }
       
-      html += `<div style="margin-top:8px;font-weight:bold">总计: <span class="result-num">${sol.total.toFixed(0)}</span> kg | 差异: ${diffDesc}</div>`;
-      html += `</div>`;
-    });
+      result += `<div style="margin-top:8px;font-weight:bold">总计: <span class="result-num">${sol.total.toFixed(0)}</span> kg | 差异: ${diffDesc}</div>`;
+      result += `</div>`;
+      return result;
+    }
+    
+    // 显示不拆分方案
+    html += `<div style="margin-bottom:10px;"><strong style="font-size:16px;">📦 不拆分方案</strong> - 直接全部出库，不拆托</div>`;
+    if (noSplitSolutions.length > 0) {
+      noSplitSolutions.forEach((sol, idx) => {
+        html += renderSolution(sol, idx === 0 ? '⭐ 最优（不拆分）' : `方案 ${idx + 1}（不拆分）`, idx === 0 ? 'green' : 'blue', true);
+      });
+    } else {
+      html += `<div class="result-card">暂无合适的不拆分方案</div>`;
+    }
+    
+    // 显示拆分方案
+    html += `<div style="margin-bottom:10px;margin-top:16px;"><strong style="font-size:16px;">✂️  可拆分方案</strong> - 可以拆托，只给需要的部分</div>`;
+    if (splitSolutions.length > 0) {
+      splitSolutions.forEach((sol, idx) => {
+        html += renderSolution(sol, idx === 0 ? '⭐ 最优（可拆分）' : `方案 ${idx + 1}（可拆分）`, idx === 0 ? 'purple' : 'orange', false);
+      });
+    } else {
+      html += `<div class="result-card">暂无合适的可拆分方案</div>`;
+    }
     
     // 显示原始需求信息
     html += `<div class="summary-box">
