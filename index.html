@@ -282,6 +282,157 @@
     setTimeout(()=>feedback.remove(), 2000);
   }
 
+  // 生成所有零托子集（保留索引信息）
+  function getZeroSubsets(zeroList) {
+    let subsets = [];
+    let n = zeroList.length;
+    for (let mask = 0; mask < (1 << n); mask++) {
+      let sum = 0;
+      let indices = [];
+      for (let i = 0; i < n; i++) {
+        if (mask & (1 << i)) {
+          sum += zeroList[i];
+          indices.push(i);
+        }
+      }
+      subsets.push({ sum, indices });
+    }
+    return subsets;
+  }
+
+  // 计算最优解
+  function findOptimalSolution(still, zeroList, perT, pBox) {
+    let validZeros = zeroList.filter(z => z > 0);
+    let subsets = getZeroSubsets(validZeros);
+    let solutions = [];
+    
+    // 对于每个零托子集
+    subsets.forEach(subset => {
+      let zeroSum = subset.sum;
+      let remaining = still - zeroSum;
+      
+      // 情况1：仅用零托子集
+      if (zeroSum > 0) {
+        solutions.push({
+          zeroSum,
+          zeroIndices: subset.indices,
+          fullPallets: 0,
+          splitPallet: 0,
+          total: zeroSum,
+          diff: Math.abs(zeroSum - still)
+        });
+      }
+      
+      // 情况2：零托 + 整托
+      if (remaining > 0) {
+        let fullNum = Math.floor(remaining / perT);
+        let total = zeroSum + fullNum * perT;
+        solutions.push({
+          zeroSum,
+          zeroIndices: subset.indices,
+          fullPallets: fullNum,
+          splitPallet: 0,
+          total,
+          diff: Math.abs(total - still)
+        });
+        
+        // 情况3：零托 + 整托 + 拆分一托
+        let splitNeed = remaining % perT;
+        if (splitNeed > 0) {
+          let needBoxes = Math.ceil(splitNeed / pBox);
+          let splitGive = needBoxes * pBox;
+          let totalWithSplit = zeroSum + fullNum * perT + splitGive;
+          solutions.push({
+            zeroSum,
+            zeroIndices: subset.indices,
+            fullPallets: fullNum,
+            splitPallet: splitGive,
+            total: totalWithSplit,
+            diff: Math.abs(totalWithSplit - still)
+          });
+        }
+        
+        // 情况4：零托 + (fullNum + 1) 整托（比拆分更优？）
+        let totalMoreFull = zeroSum + (fullNum + 1) * perT;
+        solutions.push({
+          zeroSum,
+          zeroIndices: subset.indices,
+          fullPallets: fullNum + 1,
+          splitPallet: 0,
+          total: totalMoreFull,
+          diff: Math.abs(totalMoreFull - still)
+        });
+      } else if (remaining <= 0 && zeroSum > 0) {
+        // 情况5：零托子集已足够
+        solutions.push({
+          zeroSum,
+          zeroIndices: subset.indices,
+          fullPallets: 0,
+          splitPallet: 0,
+          total: zeroSum,
+          diff: Math.abs(zeroSum - still)
+        });
+      }
+    });
+    
+    // 情况6：仅用整托（不使用任何零托）
+    let fullOnly = Math.floor(still / perT);
+    let totalFullOnly = fullOnly * perT;
+    solutions.push({
+      zeroSum: 0,
+      zeroIndices: [],
+      fullPallets: fullOnly,
+      splitPallet: 0,
+      total: totalFullOnly,
+      diff: Math.abs(totalFullOnly - still)
+    });
+    
+    let splitOnlyNeed = still % perT;
+    if (splitOnlyNeed > 0) {
+      let needBoxes = Math.ceil(splitOnlyNeed / pBox);
+      let splitOnlyGive = needBoxes * pBox;
+      let totalSplitOnly = fullOnly * perT + splitOnlyGive;
+      solutions.push({
+        zeroSum: 0,
+        zeroIndices: [],
+        fullPallets: fullOnly,
+        splitPallet: splitOnlyGive,
+        total: totalSplitOnly,
+        diff: Math.abs(totalSplitOnly - still)
+      });
+    }
+    
+    let totalMoreFullOnly = (fullOnly + 1) * perT;
+    solutions.push({
+      zeroSum: 0,
+      zeroIndices: [],
+      fullPallets: fullOnly + 1,
+      splitPallet: 0,
+      total: totalMoreFullOnly,
+      diff: Math.abs(totalMoreFullOnly - still)
+    });
+    
+    // 排序：按差异从小到大，差异相同则总重量从小到大
+    solutions.sort((a, b) => {
+      if (a.diff !== b.diff) return a.diff - b.diff;
+      return a.total - b.total;
+    });
+    
+    // 去重（保留最优的）
+    let seen = new Set();
+    let uniqueSolutions = [];
+    for (let sol of solutions) {
+      let key = `${sol.zeroSum}-${sol.fullPallets}-${sol.splitPallet}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueSolutions.push(sol);
+      }
+      if (uniqueSolutions.length >= 3) break; // 只保留前3个最优解
+    }
+    
+    return uniqueSolutions;
+  }
+
   function calcOutStock(){
     let pBox = Number(document.getElementById('perBox').value)||0;
     if(!pBox){alert('请填写每箱重量');return;}
@@ -295,55 +446,57 @@
     let outedVal = Number(document.getElementById('outedVal').value)||0;
     let zeroInputs = document.querySelectorAll('.zero-input');
     let zeroList = Array.from(zeroInputs).map(i => Number(i.value)||0);
-    let zeroTotal = zeroList.reduce((a,b)=>a+b, 0);
     
     let still = Math.max(totalNeed - outedVal, 0);
-    let useFromZero = Math.min(still, zeroTotal);
-    let leftNeed = still - useFromZero;
-    let fullNum = Math.floor(leftNeed / perT);
-    let needSplit = leftNeed % perT;
-    let originalSplit = needSplit;
-    let extraKg = 0;
+    let validZeros = zeroList.filter(z => z > 0);
     
-    if(needSplit > 0){
-      let needBoxes = Math.ceil(needSplit / pBox);
-      needSplit = needBoxes * pBox;
-      extraKg = needSplit - originalSplit;
-    }
+    let solutions = findOptimalSolution(still, validZeros, perT, pBox);
     
     let params = { pBox, needVal, needUnit, perT, outedVal, zeroList };
     
     let html = '';
     
-    if(useFromZero > 0){
-      let useBoxes = Math.round(useFromZero / pBox);
-      html += `<div class="result-card blue">
-        <div><strong>🔵 消耗零托</strong></div>
-        <span class="result-num">${useFromZero.toFixed(0)}</span> kg（${useBoxes} 箱）
-      </div>`;
-    }
+    // 显示最优解
+    solutions.forEach((sol, idx) => {
+      let isBest = idx === 0;
+      let cardClass = isBest ? 'green' : 'blue';
+      let titleClass = isBest ? '⭐ 最优方案' : `方案 ${idx + 1}`;
+      
+      html += `<div class="result-card ${cardClass}">`;
+      html += `<div><strong>${titleClass}</strong></div>`;
+      
+      if (sol.zeroSum > 0) {
+        let zeroVals = sol.zeroIndices.map(i => validZeros[i].toFixed(0));
+        html += `<div>🔵 零托: ${zeroVals.join(' + ')} = ${sol.zeroSum.toFixed(0)} kg</div>`;
+      }
+      
+      if (sol.fullPallets > 0) {
+        html += `<div>🟢 整托: ${sol.fullPallets} 托 × ${perT.toFixed(0)} kg = ${(sol.fullPallets * perT).toFixed(0)} kg</div>`;
+      }
+      
+      if (sol.splitPallet > 0) {
+        let giveBoxes = Math.round(sol.splitPallet / pBox);
+        let remainKg = perT - sol.splitPallet;
+        html += `<div>🟠 拆分: 给 ${sol.splitPallet.toFixed(0)} kg（${giveBoxes} 箱），留 ${remainKg.toFixed(0)} kg</div>`;
+      }
+      
+      let diffDesc = '';
+      if (sol.total < still) {
+        diffDesc = `少 ${(still - sol.total).toFixed(0)} kg`;
+      } else if (sol.total > still) {
+        diffDesc = `多 ${(sol.total - still).toFixed(0)} kg`;
+      } else {
+        diffDesc = '刚好！';
+      }
+      
+      html += `<div style="margin-top:8px;font-weight:bold">总计: <span class="result-num">${sol.total.toFixed(0)}</span> kg | 差异: ${diffDesc}</div>`;
+      html += `</div>`;
+    });
     
-    if(fullNum > 0){
-      html += `<div class="result-card green">
-        <div><strong>🟢 出整托</strong></div>
-        <span class="result-num">${fullNum}</span> 托 / <span class="result-num">${(fullNum*perT).toFixed(0)}</span> kg
-      </div>`;
-    }
-    
-    if(needSplit > 0){
-      let giveBoxes = Math.round(needSplit / pBox);
-      html += `<div class="result-card orange">
-        <div><strong>🟠 需拆整托</strong></div>
-        给顾客：<span class="result-num">${needSplit.toFixed(0)}</span> kg（${giveBoxes} 箱），留存：<span class="result-num">${(perT-needSplit).toFixed(0)}</span> kg
-        ${extraKg > 0 ? `<div style="color:#dc2626;font-weight:bold;margin-top:4px">⚠️ 多给: ${extraKg.toFixed(0)} kg</div>` : ''}
-      </div>`;
-    }
-    
+    // 显示原始需求信息
     html += `<div class="summary-box">
-      汇总：<span class="result-num">${fullNum}</span> 整托
-      ${useFromZero > 0 ? `+ <span class="result-num">${useFromZero.toFixed(0)}</span>kg 零托` : ''}
-      ${needSplit > 0 ? `+ <span class="result-num">1</span> 托拆分（${Math.round(needSplit/pBox)}箱）` : ''}
-      ${extraKg > 0 ? `<div style="color:#dc2626">⚠️ 多给: ${extraKg.toFixed(0)} kg</div>` : ''}
+      需求: <span class="result-num">${still.toFixed(0)}</span> kg
+      ${outedVal > 0 ? ` (已出库 ${outedVal.toFixed(0)} kg)` : ''}
     </div>`;
     
     document.getElementById('resultStock').innerHTML = html;
