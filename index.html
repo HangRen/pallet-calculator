@@ -323,93 +323,41 @@
         });
       }
       
-      // 情况2：零托 + 整托
-      if (remaining > 0) {
-        let fullNum = Math.floor(remaining / perT);
-        let total = zeroSum + fullNum * perT;
+      // 考虑所有可能的整托数量（从0到合理的上限）
+      let maxFull = Math.ceil((still + perT * 2) / perT); // 考虑比需求多一些的情况
+      for (let fullNum = 0; fullNum <= maxFull; fullNum++) {
+        let totalFull = zeroSum + fullNum * perT;
+        
+        // 情况2：零托 + fullNum 整托（不拆分）
         solutions.push({
           zeroSum,
           zeroIndices: subset.indices,
           fullPallets: fullNum,
           splitPallet: 0,
-          total,
-          diff: Math.abs(total - still)
+          total: totalFull,
+          diff: Math.abs(totalFull - still)
         });
         
-        // 情况3：零托 + 整托 + 拆分一托
-        let splitNeed = remaining % perT;
-        if (splitNeed > 0) {
-          let needBoxes = Math.ceil(splitNeed / pBox);
-          let splitGive = needBoxes * pBox;
-          let totalWithSplit = zeroSum + fullNum * perT + splitGive;
-          solutions.push({
-            zeroSum,
-            zeroIndices: subset.indices,
-            fullPallets: fullNum,
-            splitPallet: splitGive,
-            total: totalWithSplit,
-            diff: Math.abs(totalWithSplit - still)
-          });
+        // 情况3：零托 + fullNum 整托 + 拆分一托（如果还需要更多）
+        if (fullNum >= 0) {
+          let remainingAfterFull = still - (zeroSum + fullNum * perT);
+          if (remainingAfterFull > 0) {
+            let needBoxes = Math.ceil(remainingAfterFull / pBox);
+            let splitGive = needBoxes * pBox;
+            if (splitGive <= perT) { // 不能拆分超过一整托
+              let totalWithSplit = zeroSum + fullNum * perT + splitGive;
+              solutions.push({
+                zeroSum,
+                zeroIndices: subset.indices,
+                fullPallets: fullNum,
+                splitPallet: splitGive,
+                total: totalWithSplit,
+                diff: Math.abs(totalWithSplit - still)
+              });
+            }
+          }
         }
-        
-        // 情况4：零托 + (fullNum + 1) 整托（比拆分更优？）
-        let totalMoreFull = zeroSum + (fullNum + 1) * perT;
-        solutions.push({
-          zeroSum,
-          zeroIndices: subset.indices,
-          fullPallets: fullNum + 1,
-          splitPallet: 0,
-          total: totalMoreFull,
-          diff: Math.abs(totalMoreFull - still)
-        });
-      } else if (remaining <= 0 && zeroSum > 0) {
-        // 情况5：零托子集已足够
-        solutions.push({
-          zeroSum,
-          zeroIndices: subset.indices,
-          fullPallets: 0,
-          splitPallet: 0,
-          total: zeroSum,
-          diff: Math.abs(zeroSum - still)
-        });
       }
-    });
-    
-    // 情况6：仅用整托（不使用任何零托）
-    let fullOnly = Math.floor(still / perT);
-    let totalFullOnly = fullOnly * perT;
-    solutions.push({
-      zeroSum: 0,
-      zeroIndices: [],
-      fullPallets: fullOnly,
-      splitPallet: 0,
-      total: totalFullOnly,
-      diff: Math.abs(totalFullOnly - still)
-    });
-    
-    let splitOnlyNeed = still % perT;
-    if (splitOnlyNeed > 0) {
-      let needBoxes = Math.ceil(splitOnlyNeed / pBox);
-      let splitOnlyGive = needBoxes * pBox;
-      let totalSplitOnly = fullOnly * perT + splitOnlyGive;
-      solutions.push({
-        zeroSum: 0,
-        zeroIndices: [],
-        fullPallets: fullOnly,
-        splitPallet: splitOnlyGive,
-        total: totalSplitOnly,
-        diff: Math.abs(totalSplitOnly - still)
-      });
-    }
-    
-    let totalMoreFullOnly = (fullOnly + 1) * perT;
-    solutions.push({
-      zeroSum: 0,
-      zeroIndices: [],
-      fullPallets: fullOnly + 1,
-      splitPallet: 0,
-      total: totalMoreFullOnly,
-      diff: Math.abs(totalMoreFullOnly - still)
     });
     
     // 排序：按差异从小到大，差异相同则总重量从小到大
