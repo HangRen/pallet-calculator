@@ -100,9 +100,11 @@
       // 过滤掉少给的方案（不允许少给）
       solutions = solutions.filter(sol => sol.total >= still);
       
-      // 排序：优先选择正好满足需求的方案（差异为0）
-      // 如果差异相同，优先选择拆分最少的
-      // 如果拆分数量相同，优先选择使用零托的方案
+      // 排序规则：
+      // 1. 优先选择正好满足需求的方案（差异为0）
+      // 2. 差异相同，优先选择拆分最少的
+      // 3. 拆分数量相同，优先选择使用零托最多的
+      // 4. 零托使用相同，优先选择整托数少的
       solutions.sort((a, b) => {
         // 首先按差异排序（正好满足优先于多给）
         if (a.diff !== b.diff) return a.diff - b.diff;
@@ -112,9 +114,10 @@
           return a.splitPallet - b.splitPallet;
         }
         
-        // 都拆分或不拆分，优先选择使用零托的方案
-        if (a.zeroSum > 0 && b.zeroSum === 0) return -1;
-        if (a.zeroSum === 0 && b.zeroSum > 0) return 1;
+        // 都拆分或不拆分，优先选择使用零托最多的
+        if (a.zeroSum !== b.zeroSum) {
+          return b.zeroSum - a.zeroSum;
+        }
         
         // 都使用或都不使用零托，优先选择整托数少的
         if (a.fullPallets !== b.fullPallets) return a.fullPallets - b.fullPallets;
