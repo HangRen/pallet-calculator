@@ -148,13 +148,22 @@
       <input id="dirItemName" type="text" placeholder="请输入实物品名（可选）">
       
       <div class="label">实物批号</div>
-      <input id="dirBatchNo" type="text" placeholder="请输入实物批号（可选）">
+      <input id="dirBatchNo" type="text" placeholder="例如20260519" oninput="calculateExpiry()">
       
       <div class="label">实物厂家</div>
       <input id="dirManufacturer" type="text" placeholder="请输入实物厂家（可选）">
       
       <div class="label">保质期（可选）</div>
-      <input id="dirExpiryDate" type="date" placeholder="请选择保质期">
+      <div class="input-group">
+        <input id="dirShelfLife" type="number" inputmode="decimal" min="0" placeholder="请输入保质期" oninput="calculateExpiry()">
+        <select id="dirShelfLifeUnit">
+          <option value="days">天</option>
+          <option value="years">年</option>
+        </select>
+      </div>
+      <div id="dirExpiryDisplay" style="font-size:14px;color:#555;margin-top:5px;display:none">
+        <strong>到期时间:</strong> <span id="dirExpiryResult"></span>
+      </div>
       
       <button class="btn" onclick="calcDirectArrival()">计算并保存</button>
       <button class="btn btn-clear" onclick="clearDirectArrival()">🗑️ 清空输入</button>
@@ -241,8 +250,59 @@
     document.getElementById('dirManufacturer').value = '';
     document.getElementById('dirBoxWeight').value = '';
     document.getElementById('dirBoxesPerPallet').value = '';
-    document.getElementById('dirExpiryDate').value = '';
+    document.getElementById('dirShelfLife').value = '';
+    document.getElementById('dirShelfLifeUnit').value = 'days';
+    document.getElementById('dirExpiryDisplay').style.display = 'none';
+    document.getElementById('dirExpiryResult').textContent = '';
     document.getElementById('resultDirectArrival').innerHTML = '';
+  }
+
+  function calculateExpiry(){
+    let batchNo = document.getElementById('dirBatchNo').value;
+    let shelfLife = Number(document.getElementById('dirShelfLife').value)||0;
+    let unit = document.getElementById('dirShelfLifeUnit').value;
+    let displayDiv = document.getElementById('dirExpiryDisplay');
+    let resultSpan = document.getElementById('dirExpiryResult');
+
+    if(!batchNo || !shelfLife){
+      displayDiv.style.display = 'none';
+      return;
+    }
+
+    // 解析批号日期（假设格式为 YYYYMMDD，如 20260519）
+    if(batchNo.length !== 8){
+      displayDiv.style.display = 'none';
+      return;
+    }
+
+    let year = parseInt(batchNo.substring(0, 4));
+    let month = parseInt(batchNo.substring(4, 6)) - 1;
+    let day = parseInt(batchNo.substring(6, 8));
+
+    let date = new Date(year, month, day);
+    if(isNaN(date.getTime())){
+      displayDiv.style.display = 'none';
+      return;
+    }
+
+    // 添加保质期
+    if(unit === 'years'){
+      date.setFullYear(date.getFullYear() + shelfLife);
+    } else {
+      date.setDate(date.getDate() + shelfLife);
+    }
+
+    // 减去一天
+    date.setDate(date.getDate() - 1);
+
+    // 格式化为 YYYYMMDD
+    let expiryYear = date.getFullYear();
+    let expiryMonth = String(date.getMonth() + 1).padStart(2, '0');
+    let expiryDay = String(date.getDate()).padStart(2, '0');
+    let expiryDateStr = expiryYear + expiryMonth + expiryDay;
+
+    resultSpan.textContent = expiryDateStr;
+    displayDiv.style.display = 'block';
   }
 
   function getHistory(){
