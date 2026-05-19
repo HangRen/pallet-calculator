@@ -157,6 +157,7 @@
       <div class="input-group">
         <input id="dirShelfLife" type="number" inputmode="decimal" min="0" placeholder="请输入保质期" oninput="calculateExpiry()">
         <select id="dirShelfLifeUnit">
+          <option value="months">月</option>
           <option value="days">天</option>
           <option value="years">年</option>
         </select>
@@ -251,7 +252,7 @@
     document.getElementById('dirBoxWeight').value = '';
     document.getElementById('dirBoxesPerPallet').value = '';
     document.getElementById('dirShelfLife').value = '';
-    document.getElementById('dirShelfLifeUnit').value = 'days';
+    document.getElementById('dirShelfLifeUnit').value = 'months';
     document.getElementById('dirExpiryDisplay').style.display = 'none';
     document.getElementById('dirExpiryResult').textContent = '';
     document.getElementById('resultDirectArrival').innerHTML = '';
@@ -288,6 +289,8 @@
     // 添加保质期
     if(unit === 'years'){
       date.setFullYear(date.getFullYear() + shelfLife);
+    } else if(unit === 'months'){
+      date.setMonth(date.getMonth() + shelfLife);
     } else {
       date.setDate(date.getDate() + shelfLife);
     }
@@ -661,7 +664,9 @@
     let itemName = document.getElementById('dirItemName').value||'';
     let batchNo = document.getElementById('dirBatchNo').value||'';
     let manufacturer = document.getElementById('dirManufacturer').value||'';
-    let expiryDate = document.getElementById('dirExpiryDate').value||'';
+    let shelfLife = document.getElementById('dirShelfLife').value||'';
+    let shelfLifeUnit = document.getElementById('dirShelfLifeUnit').value;
+    let expiryDate = document.getElementById('dirExpiryResult').textContent||'';
     
     let totalBoxWeight = boxWeight * boxesPerPallet;
     let fullPallets = Math.floor(totalWeight / totalBoxWeight);
@@ -669,16 +674,20 @@
     let fullBoxes = Math.floor(remainingWeight / boxWeight);
     let looseWeight = remainingWeight % boxWeight;
     
-    let params = { itemName, batchNo, totalWeight, manufacturer, boxWeight, boxesPerPallet, expiryDate, arrivalType: 'direct' };
+    let params = { itemName, batchNo, totalWeight, manufacturer, boxWeight, boxesPerPallet, shelfLife, shelfLifeUnit, expiryDate, arrivalType: 'direct' };
     
     let html = '';
     
-    if(itemName || batchNo || manufacturer || expiryDate){
+    if(itemName || batchNo || manufacturer || shelfLife || expiryDate){
       html += `<div style="background:#f8fafc;padding:10px;border-radius:8px;margin-bottom:10px;font-size:13px">`;
       if(itemName) html += `<div><strong>品名:</strong> ${itemName}</div>`;
       if(batchNo) html += `<div><strong>批号:</strong> ${batchNo}</div>`;
       if(manufacturer) html += `<div><strong>厂家:</strong> ${manufacturer}</div>`;
-      if(expiryDate) html += `<div><strong>保质期:</strong> ${expiryDate}</div>`;
+      if(shelfLife) {
+        let unitText = shelfLifeUnit === 'months' ? '月' : (shelfLifeUnit === 'years' ? '年' : '天');
+        html += `<div><strong>保质期:</strong> ${shelfLife} ${unitText}</div>`;
+      }
+      if(expiryDate) html += `<div><strong>到期时间:</strong> ${expiryDate}</div>`;
       html += `</div>`;
     }
     
@@ -758,7 +767,11 @@
           if(p.manufacturer) paramsHtml += `<div class="param-row"><span>厂家</span><span>${p.manufacturer}</span></div>`;
           paramsHtml += `<div class="param-row"><span>每箱重量</span><span>${p.boxWeight} kg</span></div>`;
           paramsHtml += `<div class="param-row"><span>每托箱数</span><span>${p.boxesPerPallet}</span></div>`;
-          if(p.expiryDate) paramsHtml += `<div class="param-row"><span>保质期</span><span>${p.expiryDate}</span></div>`;
+          if(p.shelfLife) {
+            let unitText = p.shelfLifeUnit === 'months' ? '月' : (p.shelfLifeUnit === 'years' ? '年' : '天');
+            paramsHtml += `<div class="param-row"><span>保质期</span><span>${p.shelfLife} ${unitText}</span></div>`;
+          }
+          if(p.expiryDate) paramsHtml += `<div class="param-row"><span>到期时间</span><span>${p.expiryDate}</span></div>`;
           if(p.arrivalType) paramsHtml += `<div class="param-row"><span>类型</span><span>${p.arrivalType === 'direct' ? '直达到货' : '外仓到货'}</span></div>`;
           paramsHtml += `</div>`;
         }
@@ -920,7 +933,15 @@
         document.getElementById('dirManufacturer').value = p.manufacturer || '';
         document.getElementById('dirBoxWeight').value = p.boxWeight || '';
         document.getElementById('dirBoxesPerPallet').value = p.boxesPerPallet || '';
-        document.getElementById('dirExpiryDate').value = p.expiryDate || '';
+        document.getElementById('dirShelfLife').value = p.shelfLife || '';
+        document.getElementById('dirShelfLifeUnit').value = p.shelfLifeUnit || 'months';
+        if(p.expiryDate){
+          document.getElementById('dirExpiryDisplay').style.display = 'block';
+          document.getElementById('dirExpiryResult').textContent = p.expiryDate;
+        } else {
+          document.getElementById('dirExpiryDisplay').style.display = 'none';
+          document.getElementById('dirExpiryResult').textContent = '';
+        }
         
         document.querySelector('[data-target="directArrival"]').click();
         document.getElementById('resultDirectArrival').innerHTML = '';
