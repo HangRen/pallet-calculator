@@ -172,28 +172,28 @@
     </div>
 
     <div id="historyTab" class="tab-content">
-      <div class="history-header" style="flex-shrink: 0; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+      <div class="history-header" style="flex-shrink: 0; padding-bottom: 6px; border-bottom: 1px solid #eee;">
         <div class="search-bar" style="margin-bottom: 6px;">
           <input id="searchInput" type="text" placeholder="搜索备注/客户/标签..." oninput="renderHistory()">
         </div>
-        <div class="filter-bar" style="margin-bottom:6px; gap:4px;">
-          <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</button>
-          <button class="filter-btn" data-filter="outStock" onclick="setFilter('outStock')">出库</button>
-          <button class="filter-btn" data-filter="externalArrival" onclick="setFilter('externalArrival')">外仓到货</button>
-          <button class="filter-btn" data-filter="directArrival" onclick="setFilter('directArrival')">直达到货</button>
+        <div style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
+          <div class="filter-bar" style="margin-bottom:0; gap:4px; flex:1; flex-wrap:wrap;">
+            <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</button>
+            <button class="filter-btn" data-filter="outStock" onclick="setFilter('outStock')">出库</button>
+            <button class="filter-btn" data-filter="externalArrival" onclick="setFilter('externalArrival')">外仓</button>
+            <button class="filter-btn" data-filter="directArrival" onclick="setFilter('directArrival')">直达</button>
+          </div>
+          <button class="btn btn-export" onclick="exportCSV()" style="padding:4px 10px;font-size:11px;margin:0;white-space:nowrap;">📥 导出</button>
         </div>
-        <div class="input-group" style="margin-bottom:6px">
+        <div class="input-group" style="margin-bottom:4px">
           <label style="font-size:13px;color:#555;margin-right:6px">日期:</label>
           <input id="dateFilter" type="date" style="flex:1;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:13px" onchange="renderHistory()">
           <button class="filter-btn" onclick="clearDateFilter()" style="margin-left:6px;padding:4px 8px;font-size:12px">清除</button>
         </div>
-        <div style="display:flex; gap:6px;">
-          <button class="btn btn-export" onclick="exportCSV()" style="padding:8px 12px;font-size:13px;flex:1;margin:0">📥 导出</button>
-        </div>
       </div>
       <div id="historyList" style="flex: 1; overflow-y: auto; padding-top: 8px;"></div>
-      <div style="flex-shrink: 0; padding-top: 8px; border-top: 1px solid #eee;">
-        <button class="btn" style="background:#ff3b30;padding:8px 12px;font-size:13px" onclick="clearHistory()">🗑️ 清空</button>
+      <div style="flex-shrink: 0; padding-top: 6px; border-top: 1px solid #eee;">
+        <button class="btn" style="background:#ff3b30;padding:7px 12px;font-size:13px" onclick="clearHistory()">🗑️ 清空</button>
       </div>
     </div>
   </div>
