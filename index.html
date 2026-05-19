@@ -7,7 +7,7 @@
   <style>
     *{box-sizing:border-box}
     body{font-family:system-ui; background:#f4f6f8; padding:10px; max-width:100%; margin:auto; width:100%; overflow-x:hidden;}
-    .card{background:white; border-radius:12px; padding:12px; box-shadow:0 2px 8px #0001; max-height: 92vh; display: flex; flex-direction: column; width:100%;}
+    .card{background:white; border-radius:12px; padding:12px; box-shadow:0 2px 8px #0001; width:100%;}
     h2{text-align:center; margin:0 0 10px; font-size:16px}
     .label{font-size:13px; color:#555; margin:6px 0 3px}
     .label .required{color:#ff3b30}
@@ -22,9 +22,7 @@
     .tab-wrap{display:flex; margin-bottom:10px; border-radius:6px; overflow:hidden; border:1px solid #ddd; gap:0; width:100%;}
     .tab{flex:1; padding:7px 2px; text-align:center; cursor:pointer; background:#f1f1f1; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex-basis:0;}
     .tab.active{background:#007aff; color:white}
-    .tab-content{display:none;}.tab-content.active{display:block; height: 100%; overflow-y: auto; overflow-x: hidden;}
-    #historyTab.tab-content.active{display:flex; flex-direction: column; height: 100%;}
-    .card-body{flex:1; overflow:hidden;}
+    .tab-content{display:none;}.tab-content.active{display:block;}
     .zero-item{display:flex; gap:4px; margin:4px 0}
     .del{background:#ff3b30;color:white;border:none;border-radius:4px;padding:0 6px;cursor:pointer}
     .add-line{background:#34c759;color:white;border:none;border-radius:6px;padding:4px 8px;width:100%;margin:4px 0;cursor:pointer;font-size:13px}
@@ -75,16 +73,13 @@
 </head>
 <body>
   <div class="card">
-    <div class="card-header" style="flex-shrink: 0;">
-      <h2>别急，要细心哦 v1.5</h2>
-      <div class="tab-wrap">
-        <div class="tab active" data-target="outStock">出库</div>
-        <div class="tab" data-target="externalArrival">外仓</div>
-        <div class="tab" data-target="directArrival">直达</div>
-        <div class="tab" data-target="historyTab">记录</div>
-      </div>
+    <h2>别急，要细心哦 v1.5</h2>
+    <div class="tab-wrap">
+      <div class="tab active" data-target="outStock">出库</div>
+      <div class="tab" data-target="externalArrival">外仓</div>
+      <div class="tab" data-target="directArrival">直达</div>
+      <div class="tab" data-target="historyTab">记录</div>
     </div>
-    <div class="card-body" style="flex: 1; overflow: hidden;">
       <div id="outStock" class="tab-content active">
       <div class="label">每箱重量 (kg)</div>
       <input id="perBox" type="number" inputmode="decimal" min="0" placeholder="20">
@@ -201,7 +196,6 @@
       <div style="flex-shrink: 0; padding-top: 6px; border-top: 1px solid #eee;">
         <button class="btn" style="background:#ff3b30;padding:7px 12px;font-size:13px" onclick="clearHistory()">🗑️ 清空</button>
       </div>
-    </div>
     </div>
   </div>
 
