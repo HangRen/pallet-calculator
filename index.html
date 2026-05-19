@@ -176,14 +176,12 @@
         <div class="search-bar" style="margin-bottom: 6px;">
           <input id="searchInput" type="text" placeholder="搜索备注/客户/标签..." oninput="renderHistory()">
         </div>
-        <div style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
-          <div class="filter-bar" style="margin-bottom:0; gap:4px; flex:1; flex-wrap:wrap;">
-            <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</button>
-            <button class="filter-btn" data-filter="outStock" onclick="setFilter('outStock')">出库</button>
-            <button class="filter-btn" data-filter="externalArrival" onclick="setFilter('externalArrival')">外仓</button>
-            <button class="filter-btn" data-filter="directArrival" onclick="setFilter('directArrival')">直达</button>
-          </div>
-          <button class="btn btn-export" onclick="exportCSV()" style="padding:4px 10px;font-size:11px;margin:0;white-space:nowrap;">📥 导出</button>
+        <div class="filter-bar" style="margin-bottom:6px; gap:4px; flex-wrap:wrap;">
+          <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</button>
+          <button class="filter-btn" data-filter="outStock" onclick="setFilter('outStock')">出库</button>
+          <button class="filter-btn" data-filter="externalArrival" onclick="setFilter('externalArrival')">外仓</button>
+          <button class="filter-btn" data-filter="directArrival" onclick="setFilter('directArrival')">直达</button>
+          <button class="filter-btn" style="background:#5856d6;color:white;border-color:#5856d6;" onclick="exportCSV()">📥</button>
         </div>
         <div class="input-group" style="margin-bottom:4px">
           <label style="font-size:13px;color:#555;margin-right:6px">日期:</label>
