@@ -111,11 +111,11 @@
 
     <div id="arrivalCalc" class="tab-content">
       <div class="tab-wrap" style="margin-bottom:12px;">
-        <div class="tab active" data-target="externalArrival">外仓到货</div>
-        <div class="tab" data-target="directArrival">直达到货</div>
+        <div class="tab sub-tab active" data-target="externalArrival">外仓到货</div>
+        <div class="tab sub-tab" data-target="directArrival">直达到货</div>
       </div>
       
-      <div id="externalArrival" class="tab-content active">
+      <div id="externalArrival" class="sub-tab-content active">
         <!-- 已调整：必填三项移到最前面 -->
         <div class="label"><span class="required">* </span>总重量 (kg)</div>
         <input id="extTotalWeight" type="number" inputmode="decimal" min="0" placeholder="请输入总重量">
@@ -140,7 +140,7 @@
         <div id="resultExternalArrival"></div>
       </div>
       
-      <div id="directArrival" class="tab-content">
+      <div id="directArrival" class="sub-tab-content">
         <!-- 已调整：必填三项移到最前面 -->
         <div class="label"><span class="required">* </span>总重量 (kg)</div>
         <input id="dirTotalWeight" type="number" inputmode="decimal" min="0" placeholder="请输入总重量">
