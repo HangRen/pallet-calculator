@@ -994,6 +994,7 @@
     // 根据记录类型添加特定表头
     let hasOutStock = history.some(h => h.type === 'outStock');
     let hasArrival = history.some(h => h.type === 'arrivalCalc');
+    let hasShelfLife = history.some(h => h.params && h.params.shelfLife);
     
     if(hasOutStock){
       headers = headers.concat([
@@ -1008,8 +1009,6 @@
         '每箱重量(kg)', '每托箱数', '到货类型'
       ]);
       
-      // 检查是否有保质期信息
-      let hasShelfLife = history.some(h => h.params && h.params.shelfLife);
       if(hasShelfLife){
         headers = headers.concat(['保质期', '保质期单位', '到期时间']);
       }
