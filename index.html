@@ -72,7 +72,8 @@
     
     <div class="tab-wrap">
       <div class="tab active" data-target="outStock">出库</div>
-      <div class="tab" data-target="arrivalCalc">到货</div>
+      <div class="tab" data-target="externalArrival">外仓到货</div>
+      <div class="tab" data-target="directArrival">直达到货</div>
       <div class="tab" data-target="historyTab">记录</div>
     </div>
 
@@ -109,65 +110,57 @@
       <div id="resultStock"></div>
     </div>
 
-    <div id="arrivalCalc" class="tab-content">
-      <div class="tab-wrap" style="margin-bottom:12px;">
-        <div class="tab sub-tab active" data-target="externalArrival">外仓到货</div>
-        <div class="tab sub-tab" data-target="directArrival">直达到货</div>
-      </div>
+    <div id="externalArrival" class="tab-content">
+      <div class="label"><span class="required">* </span>总重量 (kg)</div>
+      <input id="extTotalWeight" type="number" inputmode="decimal" min="0" placeholder="请输入总重量">
       
-      <div id="externalArrival" class="sub-tab-content active">
-        <!-- 已调整：必填三项移到最前面 -->
-        <div class="label"><span class="required">* </span>总重量 (kg)</div>
-        <input id="extTotalWeight" type="number" inputmode="decimal" min="0" placeholder="请输入总重量">
-        
-        <div class="label"><span class="required">* </span>每箱重量 (kg)</div>
-        <input id="extBoxWeight" type="number" inputmode="decimal" min="0" placeholder="请输入每箱重量">
-        
-        <div class="label"><span class="required">* </span>每托箱数</div>
-        <input id="extBoxesPerPallet" type="number" inputmode="decimal" min="0" placeholder="请输入每托箱数">
-
-        <div class="label">实物品名</div>
-        <input id="extItemName" type="text" placeholder="请输入实物品名（可选）">
-        
-        <div class="label">实物批号</div>
-        <input id="extBatchNo" type="text" placeholder="请输入实物批号（可选）">
-        
-        <div class="label">实物厂家</div>
-        <input id="extManufacturer" type="text" placeholder="请输入实物厂家（可选）">
-        
-        <button class="btn" onclick="calcExternalArrival()">计算并保存</button>
-        <button class="btn btn-clear" onclick="clearExternalArrival()">🗑️ 清空输入</button>
-        <div id="resultExternalArrival"></div>
-      </div>
+      <div class="label"><span class="required">* </span>每箱重量 (kg)</div>
+      <input id="extBoxWeight" type="number" inputmode="decimal" min="0" placeholder="请输入每箱重量">
       
-      <div id="directArrival" class="sub-tab-content">
-        <!-- 已调整：必填三项移到最前面 -->
-        <div class="label"><span class="required">* </span>总重量 (kg)</div>
-        <input id="dirTotalWeight" type="number" inputmode="decimal" min="0" placeholder="请输入总重量">
-        
-        <div class="label"><span class="required">* </span>每箱重量 (kg)</div>
-        <input id="dirBoxWeight" type="number" inputmode="decimal" min="0" placeholder="请输入每箱重量">
-        
-        <div class="label"><span class="required">* </span>每托箱数</div>
-        <input id="dirBoxesPerPallet" type="number" inputmode="decimal" min="0" placeholder="请输入每托箱数">
+      <div class="label"><span class="required">* </span>每托箱数</div>
+      <input id="extBoxesPerPallet" type="number" inputmode="decimal" min="0" placeholder="请输入每托箱数">
 
-        <div class="label">实物品名</div>
-        <input id="dirItemName" type="text" placeholder="请输入实物品名（可选）">
-        
-        <div class="label">实物批号</div>
-        <input id="dirBatchNo" type="text" placeholder="请输入实物批号（可选）">
-        
-        <div class="label">实物厂家</div>
-        <input id="dirManufacturer" type="text" placeholder="请输入实物厂家（可选）">
-        
-        <div class="label">保质期（可选）</div>
-        <input id="dirExpiryDate" type="date" placeholder="请选择保质期">
-        
-        <button class="btn" onclick="calcDirectArrival()">计算并保存</button>
-        <button class="btn btn-clear" onclick="clearDirectArrival()">🗑️ 清空输入</button>
-        <div id="resultDirectArrival"></div>
-      </div>
+      <div class="label">实物品名</div>
+      <input id="extItemName" type="text" placeholder="请输入实物品名（可选）">
+      
+      <div class="label">实物批号</div>
+      <input id="extBatchNo" type="text" placeholder="请输入实物批号（可选）">
+      
+      <div class="label">实物厂家</div>
+      <input id="extManufacturer" type="text" placeholder="请输入实物厂家（可选）">
+      
+      <button class="btn" onclick="calcExternalArrival()">计算并保存</button>
+      <button class="btn btn-clear" onclick="clearExternalArrival()">🗑️ 清空输入</button>
+      <div id="resultExternalArrival"></div>
     </div>
+
+    <div id="directArrival" class="tab-content">
+      <div class="label"><span class="required">* </span>总重量 (kg)</div>
+      <input id="dirTotalWeight" type="number" inputmode="decimal" min="0" placeholder="请输入总重量">
+      
+      <div class="label"><span class="required">* </span>每箱重量 (kg)</div>
+      <input id="dirBoxWeight" type="number" inputmode="decimal" min="0" placeholder="请输入每箱重量">
+      
+      <div class="label"><span class="required">* </span>每托箱数</div>
+      <input id="dirBoxesPerPallet" type="number" inputmode="decimal" min="0" placeholder="请输入每托箱数">
+
+      <div class="label">实物品名</div>
+      <input id="dirItemName" type="text" placeholder="请输入实物品名（可选）">
+      
+      <div class="label">实物批号</div>
+      <input id="dirBatchNo" type="text" placeholder="请输入实物批号（可选）">
+      
+      <div class="label">实物厂家</div>
+      <input id="dirManufacturer" type="text" placeholder="请输入实物厂家（可选）">
+      
+      <div class="label">保质期（可选）</div>
+      <input id="dirExpiryDate" type="date" placeholder="请选择保质期">
+      
+      <button class="btn" onclick="calcDirectArrival()">计算并保存</button>
+      <button class="btn btn-clear" onclick="clearDirectArrival()">🗑️ 清空输入</button>
+      <div id="resultDirectArrival"></div>
+    </div>
+
     <div id="historyTab" class="tab-content">
       <div class="search-bar">
         <input id="searchInput" type="text" placeholder="搜索备注/客户/标签..." oninput="renderHistory()">
@@ -199,35 +192,14 @@
   let modalTarget = null;
   let modalRecordIndex = null;
 
-  // 主标签点击事件
-  document.querySelectorAll('#mainTabs > .tab').forEach(t=>{
+  // 标签点击事件
+  document.querySelectorAll('.tab').forEach(t=>{
     t.onclick=function(){
-      document.querySelectorAll('#mainTabs > .tab').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
       this.classList.add('active');
-      let targetContent = document.getElementById(this.dataset.target);
-      targetContent.classList.add('active');
-      if(this.dataset.target==='historyTab') renderHistory();
-      
-      // 如果是到货标签，默认显示外仓到货
-      if(this.dataset.target === 'arrivalCalc'){
-        let subTab = targetContent.querySelector('.sub-tab');
-        let subContent = targetContent.querySelector('.sub-tab-content');
-        if(subTab) subTab.classList.add('active');
-        if(subContent) subContent.classList.add('active');
-      }
-    }
-  });
-
-  // 子标签点击事件（到货内的子选项）
-  document.querySelectorAll('.sub-tab').forEach(t=>{
-    t.onclick=function(e){
-      e.stopPropagation(); // 阻止冒泡到主标签
-      let parent = this.closest('.tab-content');
-      parent.querySelectorAll('.sub-tab').forEach(x=>x.classList.remove('active'));
-      parent.querySelectorAll('.sub-tab-content').forEach(x=>x.classList.remove('active'));
-      this.classList.add('active');
       document.getElementById(this.dataset.target).classList.add('active');
+      if(this.dataset.target==='historyTab') renderHistory();
     }
   });
 
@@ -397,7 +369,6 @@
       }
       
       // 方案3：优先使用所有零托
-      // 这里假设 zeroIndices 包含所有零托
       if (zeroIndices.length === validZeros.length && zeroSum > 0) {
         let remaining = still - zeroSum;
         if (remaining > 0) {
@@ -419,7 +390,6 @@
               });
             }
           } else {
-            // 刚好够
             let total = zeroSum + fullNum * perT;
             useAllZeroSolutions.push({
               zeroSum,
@@ -431,7 +401,6 @@
             });
           }
         } else if (zeroSum >= still) {
-          // 仅用零托就够了
           useAllZeroSolutions.push({
             zeroSum,
             zeroIndices,
@@ -453,9 +422,7 @@
     
     // 排序方案2：拆分，拆分最少
     splitSolutions.sort((a, b) => {
-      // 首先差异最小（正好优先）
       if (a.diff !== b.diff) return a.diff - b.diff;
-      // 拆分数量相同，优先选择使用零托最多的
       if (a.splitPallet !== b.splitPallet) return a.splitPallet - b.splitPallet;
       if (a.zeroSum !== b.zeroSum) return b.zeroSum - a.zeroSum;
       return a.total - b.total;
@@ -874,28 +841,30 @@
       document.querySelector('[data-target="outStock"]').click();
       document.getElementById('resultStock').innerHTML = '';
       
-    } else if(record.type === 'splitCalc' && record.params){
-      let p = record.params;
-      document.getElementById('splitPerBox').value = p.pBox;
-      document.getElementById('splitNeedVal').value = p.needVal;
-      document.getElementById('splitNeedUnit').value = p.needUnit;
-      document.getElementById('splitTotalVal').value = p.totalVal;
-      document.getElementById('splitTotalUnit').value = p.totalUnit;
-      
-      document.querySelector('[data-target="splitCalc"]').click();
-      document.getElementById('resultSplit').innerHTML = '';
-      
     } else if(record.type === 'arrivalCalc' && record.params){
       let p = record.params;
-      document.getElementById('itemName').value = p.itemName || '';
-      document.getElementById('batchNo').value = p.batchNo || '';
-      document.getElementById('totalWeight').value = p.totalWeight || '';
-      document.getElementById('manufacturer').value = p.manufacturer || '';
-      document.getElementById('boxWeight').value = p.boxWeight || '';
-      document.getElementById('boxesPerPallet').value = p.boxesPerPallet || '';
-      
-      document.querySelector('[data-target="arrivalCalc"]').click();
-      document.getElementById('resultArrival').innerHTML = '';
+      if(p.arrivalType === 'external'){
+        document.getElementById('extItemName').value = p.itemName || '';
+        document.getElementById('extBatchNo').value = p.batchNo || '';
+        document.getElementById('extTotalWeight').value = p.totalWeight || '';
+        document.getElementById('extManufacturer').value = p.manufacturer || '';
+        document.getElementById('extBoxWeight').value = p.boxWeight || '';
+        document.getElementById('extBoxesPerPallet').value = p.boxesPerPallet || '';
+        
+        document.querySelector('[data-target="externalArrival"]').click();
+        document.getElementById('resultExternalArrival').innerHTML = '';
+      } else {
+        document.getElementById('dirItemName').value = p.itemName || '';
+        document.getElementById('dirBatchNo').value = p.batchNo || '';
+        document.getElementById('dirTotalWeight').value = p.totalWeight || '';
+        document.getElementById('dirManufacturer').value = p.manufacturer || '';
+        document.getElementById('dirBoxWeight').value = p.boxWeight || '';
+        document.getElementById('dirBoxesPerPallet').value = p.boxesPerPallet || '';
+        document.getElementById('dirExpiryDate').value = p.expiryDate || '';
+        
+        document.querySelector('[data-target="directArrival"]').click();
+        document.getElementById('resultDirectArrival').innerHTML = '';
+      }
     }
   }
 
