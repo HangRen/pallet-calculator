@@ -85,8 +85,8 @@
       <div class="input-group">
         <input id="needVal" type="number" inputmode="decimal" min="0">
         <select id="needUnit">
-          <option value="box">箱</option>
           <option value="kg">kg</option>
+          <option value="box">箱</option>
         </select>
       </div>
       
@@ -247,7 +247,7 @@
   function clearOutStock(){
     document.getElementById('perBox').value = '';
     document.getElementById('needVal').value = '';
-    document.getElementById('needUnit').value = 'box';
+    document.getElementById('needUnit').value = 'kg';
     document.getElementById('perPalletVal').value = '';
     document.getElementById('outedVal').value = '0';
     document.getElementById('zeroList').innerHTML = '<div class="zero-item"><input class="zero-input" type="number" inputmode="decimal" min="0"><button class="del" onclick="delLine(this)">×</button></div>';
