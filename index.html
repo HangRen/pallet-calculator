@@ -987,17 +987,83 @@
     
     let typeNames = { outStock: '出库', arrivalCalc: '到货' };
     let BOM = '\uFEFF';
-    let csv = BOM + '时间,类型,客户,标签,备注\n';
+    
+    // 定义表头
+    let headers = ['时间', '类型', '客户', '标签', '备注'];
+    
+    // 根据记录类型添加特定表头
+    let hasOutStock = history.some(h => h.type === 'outStock');
+    let hasArrival = history.some(h => h.type === 'arrivalCalc');
+    
+    if(hasOutStock){
+      headers = headers.concat([
+        '每箱重量(kg)', '需求数量', '需求单位', '每托重量(kg)', 
+        '已出库重量(kg)', '零托列表(kg)', '零托总和(kg)'
+      ]);
+    }
+    
+    if(hasArrival){
+      headers = headers.concat([
+        '品名', '批号', '厂家', '总重量(kg)', 
+        '每箱重量(kg)', '每托箱数', '到货类型'
+      ]);
+      
+      // 检查是否有保质期信息
+      let hasShelfLife = history.some(h => h.params && h.params.shelfLife);
+      if(hasShelfLife){
+        headers = headers.concat(['保质期', '保质期单位', '到期时间']);
+      }
+    }
+    
+    let csv = BOM + headers.join(',') + '\n';
     
     history.forEach(h => {
-      let summary = h.result.replace(/<[^>]+>/g, '').replace(/\n/g, ' ').substring(0, 100);
-      let row = [
+      let baseRow = [
         h.time,
         typeNames[h.type] || h.type,
         h.customer || '',
         (h.tags || []).join(';'),
         (h.note || '').replace(/"/g, '""')
       ];
+      
+      let paramsRow = [];
+      if(h.type === 'outStock' && h.params){
+        let p = h.params;
+        paramsRow = paramsRow.concat([
+          p.pBox || '',
+          p.needVal || '',
+          p.needUnit === 'box' ? '箱' : 'kg',
+          p.perT || '',
+          p.outedVal || '',
+          (p.zeroList || []).filter(z => z > 0).join(';') || '',
+          (p.zeroList || []).filter(z => z > 0).reduce((sum, z) => sum + z, 0) || ''
+        ]);
+      }
+      
+      if(h.type === 'arrivalCalc' && h.params){
+        let p = h.params;
+        let unitText = p.shelfLifeUnit === 'months' ? '月' : (p.shelfLifeUnit === 'years' ? '年' : '天');
+        
+        paramsRow = paramsRow.concat([
+          p.itemName || '',
+          p.batchNo || '',
+          p.manufacturer || '',
+          p.totalWeight || '',
+          p.boxWeight || '',
+          p.boxesPerPallet || '',
+          p.arrivalType === 'direct' ? '直达到货' : '外仓到货'
+        ]);
+        
+        if(hasShelfLife){
+          paramsRow = paramsRow.concat([
+            p.shelfLife || '',
+            p.shelfLifeUnit ? unitText : '',
+            p.expiryDate || ''
+          ]);
+        }
+      }
+      
+      let row = baseRow.concat(paramsRow);
       csv += '"' + row.join('","') + '"\n';
     });
     
