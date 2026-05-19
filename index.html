@@ -175,10 +175,15 @@
       <div class="search-bar">
         <input id="searchInput" type="text" placeholder="搜索备注/客户/标签..." oninput="renderHistory()">
       </div>
-      <div class="filter-bar">
+      <div class="filter-bar" style="margin-bottom:8px">
         <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</button>
         <button class="filter-btn" data-filter="outStock" onclick="setFilter('outStock')">出库</button>
         <button class="filter-btn" data-filter="arrivalCalc" onclick="setFilter('arrivalCalc')">到货</button>
+      </div>
+      <div class="input-group" style="margin-bottom:10px">
+        <label style="font-size:14px;color:#555;margin-right:8px">日期筛选:</label>
+        <input id="dateFilter" type="date" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px" onchange="renderHistory()">
+        <button class="filter-btn" onclick="clearDateFilter()" style="margin-left:8px">清除</button>
       </div>
       <button class="btn btn-export" onclick="exportCSV()">📥 导出 CSV</button>
       <div id="historyList"></div>
@@ -201,6 +206,18 @@
   let currentFilter = 'all';
   let modalTarget = null;
   let modalRecordIndex = null;
+  
+  // 日期筛选初始化
+  function initDateFilter(){
+    let today = new Date().toISOString().split('T')[0];
+    document.getElementById('dateFilter').value = today;
+  }
+  
+  // 清除日期筛选
+  function clearDateFilter(){
+    document.getElementById('dateFilter').value = '';
+    renderHistory();
+  }
 
   // 标签点击事件
   document.querySelectorAll('.tab').forEach(t=>{
@@ -209,7 +226,10 @@
       document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
       this.classList.add('active');
       document.getElementById(this.dataset.target).classList.add('active');
-      if(this.dataset.target==='historyTab') renderHistory();
+      if(this.dataset.target==='historyTab') {
+        initDateFilter();
+        renderHistory();
+      }
     }
   });
 
@@ -720,9 +740,18 @@
   function renderHistory(){
     let history = getHistory();
     let searchText = document.getElementById('searchInput').value.toLowerCase();
+    let dateFilter = document.getElementById('dateFilter').value;
     
     let filtered = history.filter(h => {
       if(currentFilter !== 'all' && h.type !== currentFilter) return false;
+      
+      // 日期筛选
+      if(dateFilter) {
+        let recordDate = new Date(h.timestamp).toISOString().split('T')[0];
+        if(recordDate !== dateFilter) return false;
+      }
+      
+      // 搜索筛选
       if(!searchText) return true;
       let searchContent = [
         h.note || '',
