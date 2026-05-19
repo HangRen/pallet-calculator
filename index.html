@@ -72,7 +72,6 @@
     
     <div class="tab-wrap">
       <div class="tab active" data-target="outStock">出库</div>
-      <div class="tab" data-target="splitCalc">拆零</div>
       <div class="tab" data-target="arrivalCalc">到货</div>
       <div class="tab" data-target="historyTab">记录</div>
     </div>
@@ -110,58 +109,65 @@
       <div id="resultStock"></div>
     </div>
 
-    <div id="splitCalc" class="tab-content">
-      <div class="label">顾客需求</div>
-      <div class="input-group">
-        <input id="splitNeedVal" type="number" inputmode="decimal" min="0">
-        <select id="splitNeedUnit">
-          <option value="kg">kg</option>
-          <option value="box">箱</option>
-        </select>
-      </div>
-      
-      <div class="label">托盘总重</div>
-      <div class="input-group">
-        <input id="splitTotalVal" type="number" inputmode="decimal" min="0">
-        <select id="splitTotalUnit">
-          <option value="kg">kg</option>
-          <option value="box">箱</option>
-        </select>
-      </div>
-      
-      <div class="label">每箱重量</div>
-      <input id="splitPerBox" type="number" inputmode="decimal" min="0" placeholder="20">
-      
-      <button class="btn" onclick="calcSplit()">计算并保存</button>
-      <button class="btn btn-clear" onclick="clearSplit()">🗑️ 清空输入</button>
-      <div id="resultSplit"></div>
-    </div>
-
     <div id="arrivalCalc" class="tab-content">
-      <!-- 已调整：必填三项移到最前面 -->
-      <div class="label"><span class="required">* </span>总重量 (kg)</div>
-      <input id="totalWeight" type="number" inputmode="decimal" min="0" placeholder="请输入总重量">
+      <div class="tab-wrap" style="margin-bottom:12px;">
+        <div class="tab active" data-target="externalArrival">外仓到货</div>
+        <div class="tab" data-target="directArrival">直达到货</div>
+      </div>
       
-      <div class="label"><span class="required">* </span>每箱重量 (kg)</div>
-      <input id="boxWeight" type="number" inputmode="decimal" min="0" placeholder="请输入每箱重量">
-      
-      <div class="label"><span class="required">* </span>每托箱数</div>
-      <input id="boxesPerPallet" type="number" inputmode="decimal" min="0" placeholder="请输入每托箱数">
+      <div id="externalArrival" class="tab-content active">
+        <!-- 已调整：必填三项移到最前面 -->
+        <div class="label"><span class="required">* </span>总重量 (kg)</div>
+        <input id="extTotalWeight" type="number" inputmode="decimal" min="0" placeholder="请输入总重量">
+        
+        <div class="label"><span class="required">* </span>每箱重量 (kg)</div>
+        <input id="extBoxWeight" type="number" inputmode="decimal" min="0" placeholder="请输入每箱重量">
+        
+        <div class="label"><span class="required">* </span>每托箱数</div>
+        <input id="extBoxesPerPallet" type="number" inputmode="decimal" min="0" placeholder="请输入每托箱数">
 
-      <div class="label">实物品名</div>
-      <input id="itemName" type="text" placeholder="请输入实物品名（可选）">
+        <div class="label">实物品名</div>
+        <input id="extItemName" type="text" placeholder="请输入实物品名（可选）">
+        
+        <div class="label">实物批号</div>
+        <input id="extBatchNo" type="text" placeholder="请输入实物批号（可选）">
+        
+        <div class="label">实物厂家</div>
+        <input id="extManufacturer" type="text" placeholder="请输入实物厂家（可选）">
+        
+        <button class="btn" onclick="calcExternalArrival()">计算并保存</button>
+        <button class="btn btn-clear" onclick="clearExternalArrival()">🗑️ 清空输入</button>
+        <div id="resultExternalArrival"></div>
+      </div>
       
-      <div class="label">实物批号</div>
-      <input id="batchNo" type="text" placeholder="请输入实物批号（可选）">
-      
-      <div class="label">实物厂家</div>
-      <input id="manufacturer" type="text" placeholder="请输入实物厂家（可选）">
-      
-      <button class="btn" onclick="calcArrival()">计算并保存</button>
-      <button class="btn btn-clear" onclick="clearArrival()">🗑️ 清空输入</button>
-      <div id="resultArrival"></div>
+      <div id="directArrival" class="tab-content">
+        <!-- 已调整：必填三项移到最前面 -->
+        <div class="label"><span class="required">* </span>总重量 (kg)</div>
+        <input id="dirTotalWeight" type="number" inputmode="decimal" min="0" placeholder="请输入总重量">
+        
+        <div class="label"><span class="required">* </span>每箱重量 (kg)</div>
+        <input id="dirBoxWeight" type="number" inputmode="decimal" min="0" placeholder="请输入每箱重量">
+        
+        <div class="label"><span class="required">* </span>每托箱数</div>
+        <input id="dirBoxesPerPallet" type="number" inputmode="decimal" min="0" placeholder="请输入每托箱数">
+
+        <div class="label">实物品名</div>
+        <input id="dirItemName" type="text" placeholder="请输入实物品名（可选）">
+        
+        <div class="label">实物批号</div>
+        <input id="dirBatchNo" type="text" placeholder="请输入实物批号（可选）">
+        
+        <div class="label">实物厂家</div>
+        <input id="dirManufacturer" type="text" placeholder="请输入实物厂家（可选）">
+        
+        <div class="label">保质期（可选）</div>
+        <input id="dirExpiryDate" type="date" placeholder="请选择保质期">
+        
+        <button class="btn" onclick="calcDirectArrival()">计算并保存</button>
+        <button class="btn btn-clear" onclick="clearDirectArrival()">🗑️ 清空输入</button>
+        <div id="resultDirectArrival"></div>
+      </div>
     </div>
-
     <div id="historyTab" class="tab-content">
       <div class="search-bar">
         <input id="searchInput" type="text" placeholder="搜索备注/客户/标签..." oninput="renderHistory()">
@@ -169,7 +175,6 @@
       <div class="filter-bar">
         <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</button>
         <button class="filter-btn" data-filter="outStock" onclick="setFilter('outStock')">出库</button>
-        <button class="filter-btn" data-filter="splitCalc" onclick="setFilter('splitCalc')">拆零</button>
         <button class="filter-btn" data-filter="arrivalCalc" onclick="setFilter('arrivalCalc')">到货</button>
       </div>
       <button class="btn btn-export" onclick="exportCSV()">📥 导出 CSV</button>
@@ -225,23 +230,25 @@
     document.getElementById('resultStock').innerHTML = '';
   }
 
-  function clearSplit(){
-    document.getElementById('splitNeedVal').value = '';
-    document.getElementById('splitNeedUnit').value = 'kg';
-    document.getElementById('splitTotalVal').value = '';
-    document.getElementById('splitTotalUnit').value = 'kg';
-    document.getElementById('splitPerBox').value = '';
-    document.getElementById('resultSplit').innerHTML = '';
+  function clearExternalArrival(){
+    document.getElementById('extItemName').value = '';
+    document.getElementById('extBatchNo').value = '';
+    document.getElementById('extTotalWeight').value = '';
+    document.getElementById('extManufacturer').value = '';
+    document.getElementById('extBoxWeight').value = '';
+    document.getElementById('extBoxesPerPallet').value = '';
+    document.getElementById('resultExternalArrival').innerHTML = '';
   }
 
-  function clearArrival(){
-    document.getElementById('itemName').value = '';
-    document.getElementById('batchNo').value = '';
-    document.getElementById('totalWeight').value = '';
-    document.getElementById('manufacturer').value = '';
-    document.getElementById('boxWeight').value = '';
-    document.getElementById('boxesPerPallet').value = '';
-    document.getElementById('resultArrival').innerHTML = '';
+  function clearDirectArrival(){
+    document.getElementById('dirItemName').value = '';
+    document.getElementById('dirBatchNo').value = '';
+    document.getElementById('dirTotalWeight').value = '';
+    document.getElementById('dirManufacturer').value = '';
+    document.getElementById('dirBoxWeight').value = '';
+    document.getElementById('dirBoxesPerPallet').value = '';
+    document.getElementById('dirExpiryDate').value = '';
+    document.getElementById('resultDirectArrival').innerHTML = '';
   }
 
   function getHistory(){
@@ -534,46 +541,19 @@
     showSaveFeedback();
   }
 
-  function calcSplit(){
-    let pBox = Number(document.getElementById('splitPerBox').value)||0;
-    if(!pBox){alert('请填写每箱重量'); return;}
-    let nVal = Number(document.getElementById('splitNeedVal').value)||0;
-    let nUnit = document.getElementById('splitNeedUnit').value;
-    let nKg = nUnit === 'box' ? nVal * pBox : nVal;
-    
-    let tVal = Number(document.getElementById('splitTotalVal').value)||0;
-    let tUnit = document.getElementById('splitTotalUnit').value;
-    let tKg = tUnit === 'box' ? tVal * pBox : tVal;
-    
-    let params = { pBox, needVal: nVal, needUnit: nUnit, totalVal: tVal, totalUnit: tUnit };
-    
-    let html = `<div class="result-card purple">
-      <div><strong>🔵 出库</strong></div>
-      <span class="result-num">${nKg.toFixed(2)}</span> kg / ${Math.floor(nKg/pBox)} 箱 + ${(nKg%pBox).toFixed(2)} kg
-    </div>
-    <div class="result-card green">
-      <div><strong>🟢 留存</strong></div>
-      <span class="result-num">${(tKg-nKg).toFixed(2)}</span> kg / ${Math.floor((tKg-nKg)/pBox)} 箱 + ${((tKg-nKg)%pBox).toFixed(2)} kg
-    </div>`;
-    
-    document.getElementById('resultSplit').innerHTML = html;
-    saveRecord(html, 'splitCalc', params);
-    showSaveFeedback();
-  }
-
-  function calcArrival(){
-    let totalWeight = Number(document.getElementById('totalWeight').value)||0;
+  function calcExternalArrival(){
+    let totalWeight = Number(document.getElementById('extTotalWeight').value)||0;
     if(!totalWeight){alert('请填写总重量');return;}
     
-    let boxWeight = Number(document.getElementById('boxWeight').value)||0;
+    let boxWeight = Number(document.getElementById('extBoxWeight').value)||0;
     if(!boxWeight){alert('请填写每箱重量');return;}
     
-    let boxesPerPallet = Number(document.getElementById('boxesPerPallet').value)||0;
+    let boxesPerPallet = Number(document.getElementById('extBoxesPerPallet').value)||0;
     if(!boxesPerPallet){alert('请填写每托箱数');return;}
     
-    let itemName = document.getElementById('itemName').value||'';
-    let batchNo = document.getElementById('batchNo').value||'';
-    let manufacturer = document.getElementById('manufacturer').value||'';
+    let itemName = document.getElementById('extItemName').value||'';
+    let batchNo = document.getElementById('extBatchNo').value||'';
+    let manufacturer = document.getElementById('extManufacturer').value||'';
     
     let totalBoxWeight = boxWeight * boxesPerPallet;
     let fullPallets = Math.floor(totalWeight / totalBoxWeight);
@@ -581,7 +561,7 @@
     let fullBoxes = Math.floor(remainingWeight / boxWeight);
     let looseWeight = remainingWeight % boxWeight;
     
-    let params = { itemName, batchNo, totalWeight, manufacturer, boxWeight, boxesPerPallet };
+    let params = { itemName, batchNo, totalWeight, manufacturer, boxWeight, boxesPerPallet, arrivalType: 'external' };
     
     let html = '';
     
@@ -594,7 +574,7 @@
     }
     
     html += `<div class="result-card purple">
-      <div><strong>📦 到货统计</strong></div>
+      <div><strong>📦 外仓到货统计</strong></div>
       总重量：<span class="result-num">${totalWeight.toFixed(2)}</span> kg<br>
       每托：<span class="result-num">${boxesPerPallet}</span> 箱 × <span class="result-num">${boxWeight.toFixed(2)}</span> kg = <span class="result-num">${totalBoxWeight.toFixed(2)}</span> kg
     </div>`;
@@ -614,7 +594,67 @@
       </div>`;
     }
     
-    document.getElementById('resultArrival').innerHTML = html;
+    document.getElementById('resultExternalArrival').innerHTML = html;
+    saveRecord(html, 'arrivalCalc', params);
+    showSaveFeedback();
+  }
+
+  function calcDirectArrival(){
+    let totalWeight = Number(document.getElementById('dirTotalWeight').value)||0;
+    if(!totalWeight){alert('请填写总重量');return;}
+    
+    let boxWeight = Number(document.getElementById('dirBoxWeight').value)||0;
+    if(!boxWeight){alert('请填写每箱重量');return;}
+    
+    let boxesPerPallet = Number(document.getElementById('dirBoxesPerPallet').value)||0;
+    if(!boxesPerPallet){alert('请填写每托箱数');return;}
+    
+    let itemName = document.getElementById('dirItemName').value||'';
+    let batchNo = document.getElementById('dirBatchNo').value||'';
+    let manufacturer = document.getElementById('dirManufacturer').value||'';
+    let expiryDate = document.getElementById('dirExpiryDate').value||'';
+    
+    let totalBoxWeight = boxWeight * boxesPerPallet;
+    let fullPallets = Math.floor(totalWeight / totalBoxWeight);
+    let remainingWeight = totalWeight % totalBoxWeight;
+    let fullBoxes = Math.floor(remainingWeight / boxWeight);
+    let looseWeight = remainingWeight % boxWeight;
+    
+    let params = { itemName, batchNo, totalWeight, manufacturer, boxWeight, boxesPerPallet, expiryDate, arrivalType: 'direct' };
+    
+    let html = '';
+    
+    if(itemName || batchNo || manufacturer || expiryDate){
+      html += `<div style="background:#f8fafc;padding:10px;border-radius:8px;margin-bottom:10px;font-size:13px">`;
+      if(itemName) html += `<div><strong>品名:</strong> ${itemName}</div>`;
+      if(batchNo) html += `<div><strong>批号:</strong> ${batchNo}</div>`;
+      if(manufacturer) html += `<div><strong>厂家:</strong> ${manufacturer}</div>`;
+      if(expiryDate) html += `<div><strong>保质期:</strong> ${expiryDate}</div>`;
+      html += `</div>`;
+    }
+    
+    html += `<div class="result-card purple">
+      <div><strong>📦 直达到货统计</strong></div>
+      总重量：<span class="result-num">${totalWeight.toFixed(2)}</span> kg<br>
+      每托：<span class="result-num">${boxesPerPallet}</span> 箱 × <span class="result-num">${boxWeight.toFixed(2)}</span> kg = <span class="result-num">${totalBoxWeight.toFixed(2)}</span> kg
+    </div>`;
+    
+    html += `<div class="result-card green">
+      <div><strong>🟢 结果</strong></div>
+      整托：<span class="result-num">${fullPallets}</span> 托<br>
+      零箱：<span class="result-num">${fullBoxes}</span> 箱
+      ${looseWeight > 0 ? `<br>散重：<span class="result-num">${looseWeight.toFixed(2)}</span> kg` : ''}
+    </div>`;
+    
+    if(remainingWeight > 0){
+      html += `<div class="summary-box">
+        汇总：<span class="result-num">${fullPallets}</span> 托
+        ${fullBoxes > 0 ? `+ <span class="result-num">${fullBoxes}</span> 箱` : ''}
+        ${looseWeight > 0 ? `+ <span class="result-num">${looseWeight.toFixed(2)}</span> kg散重` : ''}
+      </div>`;
+    }
+    
+    document.getElementById('resultDirectArrival').innerHTML = html;
     saveRecord(html, 'arrivalCalc', params);
     showSaveFeedback();
   }
@@ -642,7 +682,7 @@
       return;
     }
     
-    let typeNames = { outStock: '出库', splitCalc: '拆零', arrivalCalc: '到货' };
+    let typeNames = { outStock: '出库', arrivalCalc: '到货' };
     
     list.innerHTML = filtered.map((h, i) => {
       let realIndex = history.indexOf(h);
@@ -660,13 +700,6 @@
             <div class="param-row"><span>已出库</span><span>${p.outedVal} kg</span></div>
             <div class="param-row"><span>零托列表</span><span>${p.zeroList.filter(z=>z>0).join(', ') || '无'} kg</span></div>
           </div>`;
-        } else if(h.type === 'splitCalc'){
-          let p = h.params;
-          paramsHtml = `<div class="history-params">
-            <div class="param-row"><span>每箱重量</span><span>${p.pBox} kg</span></div>
-            <div class="param-row"><span>顾客需求</span><span>${p.needVal} ${p.needUnit === 'box' ? '箱' : 'kg'}</span></div>
-            <div class="param-row"><span>托盘总重</span><span>${p.totalVal} ${p.totalUnit === 'box' ? '箱' : 'kg'}</span></div>
-          </div>`;
         } else if(h.type === 'arrivalCalc'){
           let p = h.params;
           paramsHtml = `<div class="history-params">`;
@@ -676,6 +709,8 @@
           if(p.manufacturer) paramsHtml += `<div class="param-row"><span>厂家</span><span>${p.manufacturer}</span></div>`;
           paramsHtml += `<div class="param-row"><span>每箱重量</span><span>${p.boxWeight} kg</span></div>`;
           paramsHtml += `<div class="param-row"><span>每托箱数</span><span>${p.boxesPerPallet}</span></div>`;
+          if(p.expiryDate) paramsHtml += `<div class="param-row"><span>保质期</span><span>${p.expiryDate}</span></div>`;
+          if(p.arrivalType) paramsHtml += `<div class="param-row"><span>类型</span><span>${p.arrivalType === 'direct' ? '直达到货' : '外仓到货'}</span></div>`;
           paramsHtml += `</div>`;
         }
       }
@@ -849,7 +884,7 @@
       return;
     }
     
-    let typeNames = { outStock: '出库', splitCalc: '拆零', arrivalCalc: '到货' };
+    let typeNames = { outStock: '出库', arrivalCalc: '到货' };
     let BOM = '\uFEFF';
     let csv = BOM + '时间,类型,客户,标签,备注\n';
     
