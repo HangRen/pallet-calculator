@@ -770,6 +770,15 @@
     }
     
     let typeNames = { outStock: '出库', arrivalCalc: '到货' };
+      
+      // 获取详细类型名称
+      let getTypeName = (record) => {
+        if(record.type === 'outStock') return '出库';
+        if(record.type === 'arrivalCalc' && record.params) {
+          return record.params.arrivalType === 'direct' ? '直达到货' : '外仓到货';
+        }
+        return '到货';
+      };
     
     list.innerHTML = filtered.map((h, i) => {
       let realIndex = history.indexOf(h);
@@ -807,7 +816,7 @@
       }
       
       return `<div class="history-item">
-        <div><strong>${h.time}</strong> <span style="background:#007aff;color:white;padding:1px 6px;border-radius:4px;font-size:10px">${typeNames[h.type]}</span></div>
+        <div><strong>${h.time}</strong> <span style="background:#007aff;color:white;padding:1px 6px;border-radius:4px;font-size:10px">${getTypeName(h)}</span></div>
         ${h.tags.length || h.customer ? `<div class="history-tags">${customerHtml}${tagsHtml}</div>` : ''}
         <div>${h.result}</div>
         ${paramsHtml ? `<div class="history-expand" onclick="toggleParams(this)">▸ 查看输入参数</div>` : ''}
@@ -986,6 +995,16 @@
     }
     
     let typeNames = { outStock: '出库', arrivalCalc: '到货' };
+    
+    // 获取详细类型名称
+    let getTypeName = (record) => {
+      if(record.type === 'outStock') return '出库';
+      if(record.type === 'arrivalCalc' && record.params) {
+        return record.params.arrivalType === 'direct' ? '直达到货' : '外仓到货';
+      }
+      return '到货';
+    };
+    
     let BOM = '\uFEFF';
     
     // 定义表头
@@ -1019,7 +1038,7 @@
     history.forEach(h => {
       let baseRow = [
         h.time,
-        typeNames[h.type] || h.type,
+        getTypeName(h),
         h.customer || '',
         (h.tags || []).join(';'),
         (h.note || '').replace(/"/g, '""')
