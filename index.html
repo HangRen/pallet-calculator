@@ -68,7 +68,7 @@
 </head>
 <body>
   <div class="card">
-    <h2>大咖原料仓计算器</h2>
+    <h2>别急，要细心哦 v1.5</h2>
     
     <div class="tab-wrap">
       <div class="tab active" data-target="outStock">出库</div>
@@ -178,7 +178,8 @@
       <div class="filter-bar" style="margin-bottom:8px">
         <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</button>
         <button class="filter-btn" data-filter="outStock" onclick="setFilter('outStock')">出库</button>
-        <button class="filter-btn" data-filter="arrivalCalc" onclick="setFilter('arrivalCalc')">到货</button>
+        <button class="filter-btn" data-filter="externalArrival" onclick="setFilter('externalArrival')">外仓到货</button>
+        <button class="filter-btn" data-filter="directArrival" onclick="setFilter('directArrival')">直达到货</button>
       </div>
       <div class="input-group" style="margin-bottom:10px">
         <label style="font-size:14px;color:#555;margin-right:8px">日期筛选:</label>
@@ -743,7 +744,11 @@
     let dateFilter = document.getElementById('dateFilter').value;
     
     let filtered = history.filter(h => {
-      if(currentFilter !== 'all' && h.type !== currentFilter) return false;
+      if(currentFilter !== 'all') {
+        if(currentFilter === 'outStock' && h.type !== 'outStock') return false;
+        if(currentFilter === 'externalArrival' && (h.type !== 'arrivalCalc' || !h.params || h.params.arrivalType !== 'external')) return false;
+        if(currentFilter === 'directArrival' && (h.type !== 'arrivalCalc' || !h.params || h.params.arrivalType !== 'direct')) return false;
+      }
       
       // 日期筛选
       if(dateFilter) {
