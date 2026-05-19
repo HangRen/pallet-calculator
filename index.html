@@ -794,8 +794,7 @@
       };
     
     list.innerHTML = filtered.map((h, i) => {
-      let realIndex = history.indexOf(h);
-      let tagsHtml = h.tags.map(t => `<span class="tag tag-label">${t}<span style="cursor:pointer;margin-left:3px" onclick="removeTag(${realIndex},'${t}')">×</span></span>`).join('');
+      let tagsHtml = h.tags.map((t, j) => `<span class="tag tag-label">${t}<span style="cursor:pointer;margin-left:3px" onclick="removeTagByIndex(${i},${j})">×</span></span>`).join('');
       let customerHtml = h.customer ? `<span class="tag tag-customer">🏷️ ${h.customer}</span>` : '';
       
       let paramsHtml = '';
@@ -835,12 +834,12 @@
         ${paramsHtml ? `<div class="history-expand" onclick="toggleParams(this)">▸ 查看输入参数</div>` : ''}
         ${paramsHtml}
         <div class="history-actions">
-          <button class="history-btn" style="background:#e5e5e5" onclick="openModal('customer', ${realIndex})">🏷️ 客户</button>
-          <button class="history-btn" style="background:#e5e5e5" onclick="openModal('tag', ${realIndex})">📌 标签</button>
-          <button class="history-btn backfill" onclick="backfillRecord(${realIndex})">🔄 回填</button>
-          <button class="history-btn delete" onclick="deleteRecord(${realIndex})">🗑️ 删除</button>
+          <button class="history-btn" style="background:#e5e5e5" onclick="openModal('customer', ${i})">🏷️ 客户</button>
+          <button class="history-btn" style="background:#e5e5e5" onclick="openModal('tag', ${i})">📌 标签</button>
+          <button class="history-btn backfill" onclick="backfillRecord(${i})">🔄 回填</button>
+          <button class="history-btn delete" onclick="deleteRecord(${i})">🗑️ 删除</button>
         </div>
-        <input type="text" class="note-input" placeholder="添加备注..." value="${h.note || ''}" onchange="updateNote(${realIndex}, this.value)">
+        <input type="text" class="note-input" placeholder="添加备注..." value="${h.note || ''}" onchange="updateNote(${i}, this.value)">
       </div>`;
     }).join('');
   }
@@ -860,9 +859,10 @@
     renderHistory();
   }
 
-  function openModal(target, index){
+  function openModal(target, filteredIndex){
     modalTarget = target;
-    modalRecordIndex = index;
+    modalRecordIndex = getOriginalIndex(filteredIndex);
+    if(modalRecordIndex === -1) return;
     let modal = document.getElementById('tagModal');
     let input = document.getElementById('modalInput');
     let title = document.getElementById('modalTitle');
@@ -916,19 +916,76 @@
     saveHistory(history);
     renderHistory();
   }
-
-  function updateNote(index, value){
+  
+  function removeTagByIndex(filteredIndex, tagIndex){
     let history = getHistory();
-    history[index].note = value;
-    saveHistory(history);
+    let searchText = document.getElementById('searchInput').value.toLowerCase();
+    let dateFilter = document.getElementById('dateFilter').value;
+    
+    let filtered = history.filter(h => {
+      if(currentFilter !== 'all') {
+        if(currentFilter === 'outStock' && h.type !== 'outStock') return false;
+        if(currentFilter === 'externalArrival' && (h.type !== 'arrivalCalc' || !h.params || h.params.arrivalType !== 'external')) return false;
+        if(currentFilter === 'directArrival' && (h.type !== 'arrivalCalc' || !h.params || h.params.arrivalType !== 'direct')) return false;
+      }
+      if(dateFilter) {
+        let recordDate = new Date(h.timestamp).toISOString().split('T')[0];
+        if(recordDate !== dateFilter) return false;
+      }
+      if(!searchText) return true;
+      let searchContent = [h.note || '', h.customer || '', h.tags ? h.tags.join(' ') : '', h.result || ''].join(' ').toLowerCase();
+      return searchContent.includes(searchText);
+    });
+    
+    let originalIndex = history.indexOf(filtered[filteredIndex]);
+    if(originalIndex !== -1){
+      history[originalIndex].tags.splice(tagIndex, 1);
+      saveHistory(history);
+      renderHistory();
+    }
   }
 
-  function deleteRecord(index){
+  function updateNote(filteredIndex, value){
+    let history = getHistory();
+    let originalIndex = getOriginalIndex(filteredIndex);
+    if(originalIndex !== -1){
+      history[originalIndex].note = value;
+      saveHistory(history);
+    }
+  }
+
+  function deleteRecord(filteredIndex){
     if(!confirm('确定删除此记录？')) return;
     let history = getHistory();
-    history.splice(index, 1);
-    saveHistory(history);
-    renderHistory();
+    let originalIndex = getOriginalIndex(filteredIndex);
+    if(originalIndex !== -1){
+      history.splice(originalIndex, 1);
+      saveHistory(history);
+      renderHistory();
+    }
+  }
+  
+  function getOriginalIndex(filteredIndex){
+    let history = getHistory();
+    let searchText = document.getElementById('searchInput').value.toLowerCase();
+    let dateFilter = document.getElementById('dateFilter').value;
+    
+    let filtered = history.filter(h => {
+      if(currentFilter !== 'all') {
+        if(currentFilter === 'outStock' && h.type !== 'outStock') return false;
+        if(currentFilter === 'externalArrival' && (h.type !== 'arrivalCalc' || !h.params || h.params.arrivalType !== 'external')) return false;
+        if(currentFilter === 'directArrival' && (h.type !== 'arrivalCalc' || !h.params || h.params.arrivalType !== 'direct')) return false;
+      }
+      if(dateFilter) {
+        let recordDate = new Date(h.timestamp).toISOString().split('T')[0];
+        if(recordDate !== dateFilter) return false;
+      }
+      if(!searchText) return true;
+      let searchContent = [h.note || '', h.customer || '', h.tags ? h.tags.join(' ') : '', h.result || ''].join(' ').toLowerCase();
+      return searchContent.includes(searchText);
+    });
+    
+    return history.indexOf(filtered[filteredIndex]);
   }
 
   function clearHistory(){
@@ -938,9 +995,11 @@
     }
   }
 
-  function backfillRecord(index){
+  function backfillRecord(filteredIndex){
     let history = getHistory();
-    let record = history[index];
+    let originalIndex = getOriginalIndex(filteredIndex);
+    if(originalIndex === -1) return;
+    let record = history[originalIndex];
     
     if(record.type === 'outStock' && record.params){
       let p = record.params;
