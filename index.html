@@ -66,6 +66,19 @@
     .empty-state{text-align:center; padding:30px; color:#999}
     .save-feedback{color:#22c55e; font-size:12px; margin-left:8px; opacity:0; transition:opacity 0.3s}
     .save-feedback.show{opacity:1}
+    .btn-draft{background:#ff9800;color:white}
+    .draft-section{margin-top:12px;border-top:1px solid #eee;padding-top:12px}
+    .draft-title{font-size:13px;color:#666;margin-bottom:8px;font-weight:bold}
+    .draft-item{background:#fff9e6;border:1px solid #ffe0b2;border-radius:8px;padding:10px;margin-bottom:8px}
+    .draft-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .draft-time{font-size:12px;color:#999}
+    .draft-tag{background:#ff9800;color:white;padding:2px 8px;border-radius:4px;font-size:11px}
+    .draft-params{background:#fff;padding:8px;border-radius:6px;font-size:11px;margin:6px 0}
+    .draft-actions{display:flex;gap:6px;margin-top:8px}
+    .draft-btn{flex:1;padding:6px;border:none;border-radius:6px;cursor:pointer;font-size:12px}
+    .draft-btn.load{background:#007aff;color:white}
+    .draft-btn.delete{background:#ff3b30;color:white}
+    .draft-empty{text-align:center;color:#999;font-size:12px;padding:10px}
     @media screen and (max-width: 360px) {
       .tab{font-size:10px; padding:6px 1px;}
       .card{padding:10px;}
@@ -110,9 +123,17 @@
       </div>
       <button class="add-line" onclick="addZeroLine()">+ 增加零托</button>
       
-      <button class="btn" onclick="calcOutStock()">计算并保存</button>
+      <div style="display:flex; gap:8px; margin:8px 0;">
+        <button class="btn" style="flex:1;" onclick="calcOutStock()">计算并保存</button>
+        <button class="btn btn-draft" style="flex:1;" onclick="saveDraft('outStock')">📝 暂存</button>
+      </div>
       <button class="btn btn-clear" onclick="clearOutStock()">🗑️ 清空输入</button>
       <div id="resultStock"></div>
+      
+      <div class="draft-section" id="outStockDrafts">
+        <div class="draft-title">📋 暂存草稿</div>
+        <div id="outStockDraftsList"></div>
+      </div>
     </div>
 
     <div id="externalArrival" class="tab-content">
@@ -134,9 +155,17 @@
       <div class="label">实物厂家</div>
       <input id="extManufacturer" type="text" placeholder="请输入实物厂家（可选）">
       
-      <button class="btn" onclick="calcExternalArrival()">计算并保存</button>
+      <div style="display:flex; gap:8px; margin:8px 0;">
+        <button class="btn" style="flex:1;" onclick="calcExternalArrival()">计算并保存</button>
+        <button class="btn btn-draft" style="flex:1;" onclick="saveDraft('externalArrival')">📝 暂存</button>
+      </div>
       <button class="btn btn-clear" onclick="clearExternalArrival()">🗑️ 清空输入</button>
       <div id="resultExternalArrival"></div>
+      
+      <div class="draft-section" id="externalArrivalDrafts">
+        <div class="draft-title">📋 暂存草稿</div>
+        <div id="externalArrivalDraftsList"></div>
+      </div>
     </div>
 
     <div id="directArrival" class="tab-content">
@@ -171,9 +200,17 @@
         <strong>到期时间:</strong> <span id="dirExpiryResult"></span>
       </div>
       
-      <button class="btn" onclick="calcDirectArrival()">计算并保存</button>
+      <div style="display:flex; gap:8px; margin:8px 0;">
+        <button class="btn" style="flex:1;" onclick="calcDirectArrival()">计算并保存</button>
+        <button class="btn btn-draft" style="flex:1;" onclick="saveDraft('directArrival')">📝 暂存</button>
+      </div>
       <button class="btn btn-clear" onclick="clearDirectArrival()">🗑️ 清空输入</button>
       <div id="resultDirectArrival"></div>
+      
+      <div class="draft-section" id="directArrivalDrafts">
+        <div class="draft-title">📋 暂存草稿</div>
+        <div id="directArrivalDraftsList"></div>
+      </div>
     </div>
 
     <div id="historyTab" class="tab-content">
@@ -216,6 +253,211 @@
   let currentFilter = 'all';
   let modalTarget = null;
   let modalRecordIndex = null;
+  let currentEditingDraftId = null;
+  
+  function getDrafts(){
+    let data = localStorage.getItem('myDrafts');
+    return data ? JSON.parse(data) : [];
+  }
+  
+  function saveDrafts(drafts){
+    localStorage.setItem('myDrafts', JSON.stringify(drafts));
+  }
+  
+  function deleteDraft(draftId){
+    let drafts = getDrafts();
+    drafts = drafts.filter(d => d.id !== draftId);
+    saveDrafts(drafts);
+    renderAllDrafts();
+  }
+  
+  function saveDraft(type){
+    let data = {};
+    if(type === 'outStock'){
+      data = {
+        perBox: document.getElementById('perBox').value,
+        needVal: document.getElementById('needVal').value,
+        needUnit: document.getElementById('needUnit').value,
+        perPalletVal: document.getElementById('perPalletVal').value,
+        outedVal: document.getElementById('outedVal').value,
+        zeroList: Array.from(document.querySelectorAll('.zero-input')).map(i => i.value)
+      };
+    } else if(type === 'externalArrival'){
+      data = {
+        extTotalWeight: document.getElementById('extTotalWeight').value,
+        extBoxWeight: document.getElementById('extBoxWeight').value,
+        extBoxesPerPallet: document.getElementById('extBoxesPerPallet').value,
+        extItemName: document.getElementById('extItemName').value,
+        extBatchNo: document.getElementById('extBatchNo').value,
+        extManufacturer: document.getElementById('extManufacturer').value
+      };
+    } else if(type === 'directArrival'){
+      data = {
+        dirTotalWeight: document.getElementById('dirTotalWeight').value,
+        dirBoxWeight: document.getElementById('dirBoxWeight').value,
+        dirBoxesPerPallet: document.getElementById('dirBoxesPerPallet').value,
+        dirItemName: document.getElementById('dirItemName').value,
+        dirBatchNo: document.getElementById('dirBatchNo').value,
+        dirManufacturer: document.getElementById('dirManufacturer').value,
+        dirShelfLife: document.getElementById('dirShelfLife').value,
+        dirShelfLifeUnit: document.getElementById('dirShelfLifeUnit').value,
+        dirExpiryResult: document.getElementById('dirExpiryResult').textContent
+      };
+    }
+    
+    let draft = {
+      id: Date.now().toString(),
+      type: type,
+      time: new Date().toLocaleString('zh-CN'),
+      timestamp: Date.now(),
+      data: data
+    };
+    
+    let drafts = getDrafts();
+    drafts.unshift(draft);
+    saveDrafts(drafts);
+    renderAllDrafts();
+    
+    let feedback = document.createElement('span');
+    feedback.className = 'save-feedback show';
+    feedback.textContent = '✓ 已暂存';
+    document.querySelector('.tab.active').parentElement.appendChild(feedback);
+    setTimeout(()=>feedback.remove(), 2000);
+  }
+  
+  function loadDraft(draftId){
+    let drafts = getDrafts();
+    let draft = drafts.find(d => d.id === draftId);
+    if(!draft) return;
+    
+    currentEditingDraftId = draftId;
+    
+    if(draft.type === 'outStock'){
+      document.getElementById('perBox').value = draft.data.perBox || '';
+      document.getElementById('needVal').value = draft.data.needVal || '';
+      document.getElementById('needUnit').value = draft.data.needUnit || 'kg';
+      document.getElementById('perPalletVal').value = draft.data.perPalletVal || '';
+      document.getElementById('outedVal').value = draft.data.outedVal || '0';
+      
+      let zeroList = document.getElementById('zeroList');
+      zeroList.innerHTML = '';
+      if(draft.data.zeroList && draft.data.zeroList.length > 0){
+        draft.data.zeroList.forEach(val => {
+          let div = document.createElement('div');
+          div.className = 'zero-item';
+          div.innerHTML = `<input class="zero-input" type="number" value="${val}"><button class="del" onclick="delLine(this)">×</button>`;
+          zeroList.appendChild(div);
+        });
+      } else {
+        addZeroLine();
+      }
+      
+      document.querySelector('[data-target="outStock"]').click();
+      document.getElementById('resultStock').innerHTML = '';
+      
+    } else if(draft.type === 'externalArrival'){
+      document.getElementById('extTotalWeight').value = draft.data.extTotalWeight || '';
+      document.getElementById('extBoxWeight').value = draft.data.extBoxWeight || '';
+      document.getElementById('extBoxesPerPallet').value = draft.data.extBoxesPerPallet || '';
+      document.getElementById('extItemName').value = draft.data.extItemName || '';
+      document.getElementById('extBatchNo').value = draft.data.extBatchNo || '';
+      document.getElementById('extManufacturer').value = draft.data.extManufacturer || '';
+      
+      document.querySelector('[data-target="externalArrival"]').click();
+      document.getElementById('resultExternalArrival').innerHTML = '';
+      
+    } else if(draft.type === 'directArrival'){
+      document.getElementById('dirTotalWeight').value = draft.data.dirTotalWeight || '';
+      document.getElementById('dirBoxWeight').value = draft.data.dirBoxWeight || '';
+      document.getElementById('dirBoxesPerPallet').value = draft.data.dirBoxesPerPallet || '';
+      document.getElementById('dirItemName').value = draft.data.dirItemName || '';
+      document.getElementById('dirBatchNo').value = draft.data.dirBatchNo || '';
+      document.getElementById('dirManufacturer').value = draft.data.dirManufacturer || '';
+      document.getElementById('dirShelfLife').value = draft.data.dirShelfLife || '';
+      document.getElementById('dirShelfLifeUnit').value = draft.data.dirShelfLifeUnit || 'months';
+      
+      if(draft.data.dirExpiryResult){
+        document.getElementById('dirExpiryDisplay').style.display = 'block';
+        document.getElementById('dirExpiryResult').textContent = draft.data.dirExpiryResult;
+      } else {
+        document.getElementById('dirExpiryDisplay').style.display = 'none';
+        document.getElementById('dirExpiryResult').textContent = '';
+      }
+      
+      document.querySelector('[data-target="directArrival"]').click();
+      document.getElementById('resultDirectArrival').innerHTML = '';
+    }
+  }
+  
+  function renderDraftsByType(type, containerId){
+    let drafts = getDrafts().filter(d => d.type === type);
+    let container = document.getElementById(containerId);
+    
+    if(drafts.length === 0){
+      container.innerHTML = '<div class="draft-empty">暂无暂存草稿</div>';
+      return;
+    }
+    
+    let typeNames = { outStock: '出库', externalArrival: '外仓到货', directArrival: '直达到货' };
+    
+    container.innerHTML = drafts.map(d => {
+      let paramsHtml = '';
+      
+      if(d.type === 'outStock'){
+        let data = d.data;
+        paramsHtml = `<div class="draft-params">`;
+        if(data.perBox) paramsHtml += `<div class="param-row"><span>每箱重量</span><span>${data.perBox} kg</span></div>`;
+        if(data.needVal) paramsHtml += `<div class="param-row"><span>需求</span><span>${data.needVal} ${data.needUnit === 'box' ? '箱' : 'kg'}</span></div>`;
+        if(data.perPalletVal) paramsHtml += `<div class="param-row"><span>每托重量</span><span>${data.perPalletVal} kg</span></div>`;
+        if(data.outedVal && data.outedVal !== '0') paramsHtml += `<div class="param-row"><span>已出库</span><span>${data.outedVal} kg</span></div>`;
+        if(data.zeroList && data.zeroList.some(z => z)) paramsHtml += `<div class="param-row"><span>零托列表</span><span>${data.zeroList.filter(z => z).join(', ') || '无'} kg</span></div>`;
+        paramsHtml += `</div>`;
+      } else if(d.type === 'externalArrival'){
+        let data = d.data;
+        paramsHtml = `<div class="draft-params">`;
+        if(data.extItemName) paramsHtml += `<div class="param-row"><span>品名</span><span>${data.extItemName}</span></div>`;
+        if(data.extBatchNo) paramsHtml += `<div class="param-row"><span>批号</span><span>${data.extBatchNo}</span></div>`;
+        if(data.extTotalWeight) paramsHtml += `<div class="param-row"><span>总重量</span><span>${data.extTotalWeight} kg</span></div>`;
+        if(data.extManufacturer) paramsHtml += `<div class="param-row"><span>厂家</span><span>${data.extManufacturer}</span></div>`;
+        if(data.extBoxWeight) paramsHtml += `<div class="param-row"><span>每箱重量</span><span>${data.extBoxWeight} kg</span></div>`;
+        if(data.extBoxesPerPallet) paramsHtml += `<div class="param-row"><span>每托箱数</span><span>${data.extBoxesPerPallet}</span></div>`;
+        paramsHtml += `</div>`;
+      } else if(d.type === 'directArrival'){
+        let data = d.data;
+        paramsHtml = `<div class="draft-params">`;
+        if(data.dirItemName) paramsHtml += `<div class="param-row"><span>品名</span><span>${data.dirItemName}</span></div>`;
+        if(data.dirBatchNo) paramsHtml += `<div class="param-row"><span>批号</span><span>${data.dirBatchNo}</span></div>`;
+        if(data.dirTotalWeight) paramsHtml += `<div class="param-row"><span>总重量</span><span>${data.dirTotalWeight} kg</span></div>`;
+        if(data.dirManufacturer) paramsHtml += `<div class="param-row"><span>厂家</span><span>${data.dirManufacturer}</span></div>`;
+        if(data.dirBoxWeight) paramsHtml += `<div class="param-row"><span>每箱重量</span><span>${data.dirBoxWeight} kg</span></div>`;
+        if(data.dirBoxesPerPallet) paramsHtml += `<div class="param-row"><span>每托箱数</span><span>${data.dirBoxesPerPallet}</span></div>`;
+        if(data.dirShelfLife){
+          let unitText = data.dirShelfLifeUnit === 'months' ? '月' : (data.dirShelfLifeUnit === 'years' ? '年' : '天');
+          paramsHtml += `<div class="param-row"><span>保质期</span><span>${data.dirShelfLife} ${unitText}</span></div>`;
+        }
+        if(data.dirExpiryResult) paramsHtml += `<div class="param-row"><span>到期时间</span><span>${data.dirExpiryResult}</span></div>`;
+        paramsHtml += `</div>`;
+      }
+      
+      return `<div class="draft-item">
+        <div class="draft-header">
+          <span class="draft-time">${d.time}</span>
+          <span class="draft-tag">草稿</span>
+        </div>
+        ${paramsHtml}
+        <div class="draft-actions">
+          <button class="draft-btn load" onclick="loadDraft('${d.id}')">🔄 继续编辑</button>
+          <button class="draft-btn delete" onclick="deleteDraft('${d.id}')">🗑️ 删除</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  
+  function renderAllDrafts(){
+    renderDraftsByType('outStock', 'outStockDraftsList');
+    renderDraftsByType('externalArrival', 'externalArrivalDraftsList');
+    renderDraftsByType('directArrival', 'directArrivalDraftsList');
+  }
   
   // 日期筛选初始化
   function initDateFilter(){
@@ -621,6 +863,11 @@
     document.getElementById('resultStock').innerHTML = html;
     saveRecord(html, 'outStock', params);
     showSaveFeedback();
+    
+    if(currentEditingDraftId){
+      deleteDraft(currentEditingDraftId);
+      currentEditingDraftId = null;
+    }
   }
 
   function calcExternalArrival(){
@@ -679,6 +926,11 @@
     document.getElementById('resultExternalArrival').innerHTML = html;
     saveRecord(html, 'arrivalCalc', params);
     showSaveFeedback();
+    
+    if(currentEditingDraftId){
+      deleteDraft(currentEditingDraftId);
+      currentEditingDraftId = null;
+    }
   }
 
   function calcDirectArrival(){
@@ -745,6 +997,11 @@
     document.getElementById('resultDirectArrival').innerHTML = html;
     saveRecord(html, 'arrivalCalc', params);
     showSaveFeedback();
+    
+    if(currentEditingDraftId){
+      deleteDraft(currentEditingDraftId);
+      currentEditingDraftId = null;
+    }
   }
 
   function renderHistory(){
@@ -1166,6 +1423,8 @@
     a.click();
     URL.revokeObjectURL(url);
   }
+  
+  renderAllDrafts();
 </script>
 </body>
 </html>
